@@ -1,0 +1,8 @@
+//Laravel UUIDs
+https://medium.com/@laravelprotips/uuid-in-laravel-a-simple-guide-55cdc4642d43
+
+//Laravel Models
+https://devdojo.com/guide/laravel/models
+
+//Email validation
+https://www.abstractapi.com/guides/email-validation/laravel-email-validation
