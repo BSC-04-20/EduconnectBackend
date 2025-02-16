@@ -11,3 +11,5 @@ Route::get('/user', function (Request $request) {
 Route::get("/trial", [LectureController::class, 'show']);
 
 Route::post("/lecture/signup", [LectureController::class, "signup"]);
+
+Route::post("/lecture/login", [LectureController::class, "login"]);
