@@ -32,12 +32,15 @@ class LectureController extends Controller
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        // Create a new API token (if using Sanctum)
+
+        //Deleting all previous tokes
+        $user->tokens()->delete();
+
+        // Create a new API token
         $token = $user->createToken('API Token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful',
-            'user' => $user,
             'token' => $token
         ]);
     }
