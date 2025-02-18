@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use App\Models\ClassModel; 
+use App\Models\ClassModel;
+use App\Models\ClassStudents;  
 
 class ClassController extends Controller
 {
@@ -51,5 +52,25 @@ class ClassController extends Controller
             'status' => 'success',
             'data' => $classes
         ], 200);
+    }
+
+    public function join(Request $request){
+        // Validate the request
+        $request->validate([
+            'code' => 'required|string|exists:classes,class_code',
+        ]);
+
+        // Find the class by code
+        $class = ClassModel::where('class_code', $request->code)->first();
+        $classStudent = new ClassStudents();
+
+        $classStudent->classe_id = $class->id;
+        $classStudent->student_id = $request->user()->id;
+
+        $classStudent->save();
+
+        return response()->json([
+            "message" => "joined successfully"
+        ], 201);
     }
 }

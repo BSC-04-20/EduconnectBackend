@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\EventRequest;
 use App\Models\Event;
+use Carbon\Carbon;
 
 class EventController extends Controller
 {
@@ -14,8 +15,6 @@ class EventController extends Controller
      */
     public function store(EventRequest $request)
     {
-        // Combine date and time into a single DateTime format
-        $eventDateTime = "{$request->date} {$request->time}";
 
         // Create the event
         $event = Event::create([
@@ -23,7 +22,7 @@ class EventController extends Controller
             'name' => $request->name,
             'location' => $request->location,
             'date' => $request->date,
-            'time' => $request->time,
+            'time' => Carbon::parse($request->time)->format('H:i'),
             "number_of_attendees" => 0
         ]);
 
