@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\ClassModel;
-use App\Models\ClassStudents;  
+use App\Models\ClassStudents;
+use App\Models\Lecture;  
 
 class ClassController extends Controller
 {
@@ -62,15 +63,37 @@ class ClassController extends Controller
 
         // Find the class by code
         $class = ClassModel::where('class_code', $request->code)->first();
-        $classStudent = new ClassStudents();
 
+        // Check if the student is already in the class
+        $alreadyJoined = ClassStudents::where('classe_id', $class->id)
+            ->where('student_id', $request->user()->id)
+            ->exists();
+
+        if ($alreadyJoined) {
+            return response()->json([
+                "message" => "You have already joined this class"
+            ], 409); 
+        }
+
+        // Add the student to the class
+        $classStudent = new ClassStudents();
         $classStudent->classe_id = $class->id;
         $classStudent->student_id = $request->user()->id;
-
         $classStudent->save();
 
         return response()->json([
-            "message" => "joined successfully"
+            "message" => "Joined successfully"
         ], 201);
     }
+
+    public function studentClasses(Request $request) {
+        $classes = ClassStudents::where('student_id', $request->user()->id)
+            ->join('classes', 'classstudents.classe_id', '=', 'classes.id') // Join with ClassModel
+            ->join('lectures', 'classes.lecture_id', '=', 'lectures.id') // Join with Lecture
+            ->get(['classes.name as class_name', 'lectures.fullname as lecture_name']);
+    
+        return response()->json([
+            'data' => $classes
+        ], 200);
+    }  
 }
