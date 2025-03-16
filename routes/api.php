@@ -7,6 +7,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AssignmentController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -46,6 +47,17 @@ Route::prefix("announcement")
         Route::get("/get/{id}", "show");
         Route::put("/update/{id}", "update");
         Route::delete("/delete/{id}", "destroy");
+    });
+
+Route::prefix("assignment")
+    ->controller(AssignmentController::class)
+    ->middleware('auth:sanctum')
+    ->group(function () {
+        Route::post("/create", "store"); // Create an assignment
+        Route::get("/get", "index"); // Get all assignments
+        Route::get("/get/{id}", "show"); // Get a specific assignment
+        Route::put("/update/{id}", "update"); // Update an assignment
+        Route::delete("/delete/{id}", "destroy"); // Delete an assignment
     });
 
 Route::prefix("event")->controller(EventController::class)->middleware('auth:sanctum')->group(function (){
