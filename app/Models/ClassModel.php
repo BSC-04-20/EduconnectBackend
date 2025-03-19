@@ -14,6 +14,5 @@ class ClassModel extends Model
     protected $primaryKey = 'id';
     public $timestamps = true;
     protected $fillable = ['name', 'class_code', "lecture_id", "number_of_students"];
-    protected $hidden = ['created_at', "updated_at"];
-
+    protected $hidden = ['created_at', "updated_at", 'lecture_id'];
 }

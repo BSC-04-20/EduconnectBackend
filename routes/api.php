@@ -35,6 +35,7 @@ Route::prefix("classes")->controller(ClassController::class)->middleware('auth:s
     Route::post("/create", "create");
     Route::post("/join", "join");
     Route::get("/get", "lectureClasses");
+    Route::get('/get/{id}', 'getClassById');
     Route::get("/get/student", "studentClasses");
 });
 

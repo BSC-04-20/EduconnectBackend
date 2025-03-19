@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\ClassModel;
 use App\Models\ClassStudents;
+use App\Models\Announcement;
 use App\Models\Lecture;  
 
 class ClassController extends Controller
@@ -54,6 +55,28 @@ class ClassController extends Controller
             'data' => $classes
         ], 200);
     }
+
+    public function getClassById($id){
+    // Find the class by its ID
+    $class = ClassModel::select('name', "class_code")->find($id);
+    $enrolledStudents = ClassStudents::where('classe_id', $id)->count();
+    $announcements = Announcement::where('class_id', $id)->get();
+
+    // If the class is not found, return an error response
+    if (!$class) {
+        return response()->json([
+            'message' => 'Class not found'
+        ], 404);
+    }
+
+    // Return the class data
+    return response()->json([
+        'data' => $class,
+        'total'=>$enrolledStudents,
+        "announcements" => $announcements
+    ], 200);
+    }
+
 
     public function join(Request $request){
         // Validate the request

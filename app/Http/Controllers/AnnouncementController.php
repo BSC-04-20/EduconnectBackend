@@ -11,9 +11,14 @@ class AnnouncementController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
+    public function index(){
+        // Fetch all announcements
+        $announcements = Announcement::all();
+
+        // Return the announcements as a JSON response
+        return response()->json([
+            'data' => $announcements
+        ], 200);
     }
 
     /**
