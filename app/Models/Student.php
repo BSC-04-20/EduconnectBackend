@@ -16,5 +16,10 @@ class Student extends Authenticatable
     protected $primaryKey = 'id';
     public $timestamps = true;
     protected $fillable = ["fullname", "email", "phonenumber", "password"];
-    protected $hidden = ["password", "created_at", "updated_at"];
+    protected $hidden = ["password", "created_at", "updated_at", "pivot"];
+
+    public function classes()
+    {
+        return $this->belongsToMany(ClassModel::class, 'classstudents', 'student_id', 'classe_id');
+    }
 }

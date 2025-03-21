@@ -15,4 +15,9 @@ class ClassModel extends Model
     public $timestamps = true;
     protected $fillable = ['name', 'class_code', "lecture_id", "number_of_students"];
     protected $hidden = ['created_at', "updated_at", 'lecture_id'];
+
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'classstudents', 'classe_id', 'student_id');
+    }
 }

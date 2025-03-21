@@ -118,5 +118,12 @@ class ClassController extends Controller
         return response()->json([
             'data' => $classes
         ], 200);
-    }  
+    }
+    
+    public function getStudents($classId){
+        $class = ClassModel::with('students')->findOrFail($classId);
+        return response()->json([
+            "name" => $class['name'],
+            "students"=>$class->students]);
+    }
 }
