@@ -6,3 +6,6 @@ https://devdojo.com/guide/laravel/models
 
 //Email validation
 https://www.abstractapi.com/guides/email-validation/laravel-email-validation
+
+//setting up email
+https://www.mailgun.com/blog/dev-life/sending-email-laravel-mailgun/

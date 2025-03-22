@@ -7,6 +7,9 @@ use App\Models\Student;
 use App\Http\Requests\StudentRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\RegisterMail;
+
 
 class StudentController extends Controller
 {
@@ -42,17 +45,19 @@ class StudentController extends Controller
         ]);
     }
 
-    function signup(StudentRequest $request){
-        $validated = $request->validated();
+    function signup(Request $request){
+        // $validated = $request->validated();
 
-        $lecture = new Student();
+        $student = new Student();
 
-        $lecture->fullname = $request->fullname;
-        $lecture->email = $request->email;
-        $lecture->phonenumber = $request->phonenumber;
-        $lecture->password = Hash::make($request->input("password"));
+        $student->fullname = $request->fullname;
+        $student->email = $request->email;
+        $student->phonenumber = $request->phonenumber;
+        $student->password = Hash::make($request->input("password"));
 
-        $lecture->save();
+        // $student->save();
+
+        Mail::to("wes@gmail.com")->send(new RegisterMail($student));
 
         return response()->json([
             "message" => "Created Successfully"
