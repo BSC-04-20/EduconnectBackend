@@ -9,7 +9,7 @@
                 <p>Welcome to <span class="text-sky-900 font-bold">Educonnect</span>, your gateway to a seamless and engaging educational 
                     experience! We’re excited to have you on board as part of our growing learning community.
                 </p>
-                <img class="w-[60%]" src="{{ asset('svgs/Welcome-bro.svg') }}" alt="welcome image">
+                <!-- <img class="w-[60%]" src="{{ asset('svgs/Welcome-bro.svg') }}" alt="welcome image"> -->
                 <a href="http://localhost:5173/" target="_blank" class="py-2 px-5 bg-sky-900 text-white font-medium rounded-sm w-max hover:bg-sky-700">About Us</a>
             </div>
     </body>

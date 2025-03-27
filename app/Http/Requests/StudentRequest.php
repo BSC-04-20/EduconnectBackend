@@ -18,8 +18,8 @@ class StudentRequest extends FormRequest
         return [
             //
             "fullname" => ["bail", "required"],
-            "phonenumber" => ['bail', "required", "min:10", "unique:lectures,phonenumber"],
-            "email" => ['bail', 'required','email:rfc,dns', 'unique:lectures,email'],
+            "phonenumber" => ['bail', "required", "min:10", "unique:students,phonenumber"],
+            "email" => ['bail', 'required', 'unique:students,email'],
             "password" => ['bail', 'required']
         ];
     }

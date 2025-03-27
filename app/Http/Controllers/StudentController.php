@@ -55,7 +55,7 @@ class StudentController extends Controller
         $student->phonenumber = $request->phonenumber;
         $student->password = Hash::make($request->input("password"));
 
-        // $student->save();
+        $student->save();
 
         Mail::to("wes@gmail.com")->send(new RegisterMail($student));
 

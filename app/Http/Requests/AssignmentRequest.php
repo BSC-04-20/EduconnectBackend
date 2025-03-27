@@ -22,7 +22,7 @@ class AssignmentRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'due_date' => 'required|date',
+            'due_date' => 'required|date_format:Y-m-d H:i:s',
             'class_id' => 'required|uuid|exists:classes,id',
         ];
     }

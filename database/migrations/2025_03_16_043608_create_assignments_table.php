@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->uuid('id')->primary();
             $table->string('title');
             $table->text('description');
-            $table->date('due_date');
+            $table->dateTime('due_date');
             $table->uuid('class_id');
             $table->timestamps();
 

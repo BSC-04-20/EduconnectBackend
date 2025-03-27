@@ -1,0 +1,24 @@
+#1: Updated my server
+apt update && apt upgrade -y
+
+#2:Installing Linux, Nginx, MySQL, PHP
+apt install nginx php-fpm php-cli php-mbstring php-xml php-bcmath php-curl php-zip unzip php-mysql mysql-server -y
+
+#3 Started mysql
+mysql -u root -p
+
+#4 Open mysql config file
+nano /etc/mysql/mysql.conf.d/mysqld.cnf
+
+#5 Find bind-address = 127.0.0.1 and change it to:
+bind-address = 0.0.0.0
+
+#6 Restart mysql
+systemctl restart mysql
+
+#7 upload your laravel project
+cd /var/www
+git clone https://github.com/yourrepo.git laravel-api
+cd laravel-api
+composer install
+
