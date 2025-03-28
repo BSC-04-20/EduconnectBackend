@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AssignmentRequest;
 use App\Models\Assignment;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class AssignmentController extends Controller
 {

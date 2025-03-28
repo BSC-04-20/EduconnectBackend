@@ -8,7 +8,8 @@ use Illuminate\Support\Str;
 use App\Models\ClassModel;
 use App\Models\ClassStudents;
 use App\Models\Announcement;
-use App\Models\Lecture;  
+use App\Models\Lecture;
+use Illuminate\Http\JsonResponse;  
 
 class ClassController extends Controller
 {

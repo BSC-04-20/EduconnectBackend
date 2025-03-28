@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\EventRequest;
 use App\Models\Event;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 
 class EventController extends Controller
 {

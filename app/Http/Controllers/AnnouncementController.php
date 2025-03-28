@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AnnouncementRequest;
 use App\Models\Announcement;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class AnnouncementController extends Controller
 {
