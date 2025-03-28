@@ -7,6 +7,7 @@ use App\Models\Lecture;
 use App\Http\Requests\LectureRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
 
 class LectureController extends Controller
 {
