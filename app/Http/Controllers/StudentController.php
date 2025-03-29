@@ -58,7 +58,7 @@ class StudentController extends Controller
 
         $student->save();
 
-        Mail::to("wes@gmail.com")->send(new RegisterMail($student));
+        // Mail::to("wes@gmail.com")->send(new RegisterMail($student));
 
         return response()->json([
             "message" => "Created Successfully"
