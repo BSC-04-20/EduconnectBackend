@@ -4,14 +4,14 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class AnnouncementRequest extends FormRequest
+class ResourceRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true; // Change this based on authentication logic
+        return true; // Allow the request, adjust based on your authorization logic.
     }
 
     /**
@@ -21,9 +21,9 @@ class AnnouncementRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'class_id' => 'required|uuid|exists:classes,id',
-            'announcement_files' => 'nullable'
+            'description' => 'nullable|string',
+            'class_id' => 'required|uuid|exists:classes,id', // Foreign key for classes
+            'files' => 'required | file'
         ];
     }
 }

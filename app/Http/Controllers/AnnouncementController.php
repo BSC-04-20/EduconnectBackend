@@ -31,39 +31,41 @@ class AnnouncementController extends Controller
     {
         //
     }
-    
-    public function store(AnnouncementRequest $request)
-    {
-        //Creating the announcement 
+
+    public function store(AnnouncementRequest $request) {
         $announcement = Announcement::create($request->validated());
-        
-        //Checking if the file exist
-        if ($request->hasFile('announcement_file')) {
-    
-            $file = $request->file('announcement_file');
-            $destinationPath = '/var/www/html/educonnect/announcement'; // setting the destination path
-            
-            //Creating the announcement directory if it already exist or not
+
+        // Check if multiple files are uploaded
+        if ($request->hasFile('announcement_files')) {
+            $request->validate([
+                'announcement_files.*' => 'file', // Validate each file
+            ]);
+
+            $destinationPath = '/var/www/html/educonnect/announcement';
+
+            // Ensure the directory exists
             if (!file_exists($destinationPath)) {
                 mkdir($destinationPath, 0755, true);
             }
-            
-            //Setting the file name
-            $fileName = time() . '-' . Str::random(10) . '-' . $file->getClientOriginalName();
-            $file->move($destinationPath, $fileName); //moving the filename
-    
-            AnnouncementFile::create([
-                'announcement_id' => $announcement->id,
-                'file_path' => 'educonnect/announcement/' . $fileName,
-            ]);
+
+            // Loop through each uploaded file
+            foreach ($request->file('announcement_files') as $file) {
+                $fileExtension = $file->getClientOriginalExtension();
+                $fileName = time() . '-' . Str::random(10) . '.' . $fileExtension;
+
+                $file->move($destinationPath, $fileName);
+
+                AnnouncementFile::create([
+                    'announcement_id' => $announcement->id,
+                    'file_path' => 'educonnect/announcement/' . $fileName,
+                ]);
+            }
         }
-    
+
         return response()->json([
             'message' => 'Announcement created successfully.',
-            'announcement' => $announcement
         ], 201);
     }
-    
 
     /**
      * Display the specified resource.
@@ -92,8 +94,34 @@ class AnnouncementController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
+    
+    public function destroy(string $id){
+        // Find the announcement by its ID
+        $announcement = Announcement::findOrFail($id);
+    
+        // Check if there are any associated files
+        $announcementFiles = AnnouncementFile::where('announcement_id', $announcement->id)->get();
+    
+        if ($announcementFiles->isNotEmpty()) {
+            // If there are files, delete each file from the file system
+            foreach ($announcementFiles as $file) {
+                $filePath = public_path($file->file_path); // Get the full file path
+                
+                // Check if the file exists and delete it
+                if (file_exists($filePath)) {
+                    unlink($filePath); // Delete the file
+                }
+    
+                // Delete the record from the 'announcement_files' table
+                $file->delete();
+            }
+        }
+    
+        // Delete the announcement record
+        $announcement->delete();
+    
+        return response()->json([
+            'message' => 'Announcement and associated files deleted successfully, if any.'
+        ], 200);
     }
 }
