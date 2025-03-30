@@ -23,6 +23,7 @@ class AnnouncementRequest extends FormRequest
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'class_id' => 'required|uuid|exists:classes,id',
+            'announcement_file' => 'nullable'
         ];
     }
 }
