@@ -8,6 +8,7 @@ use App\Http\Controllers\ClassController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\ResourceController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -66,6 +67,15 @@ Route::prefix("assignment")
 Route::prefix("event")->controller(EventController::class)->middleware('auth:sanctum')->group(function (){
     Route::post("/create", "store");
     Route::get("/get", "get");
+});
+
+Route::prefix("resources")->controller(ResourceController::class)->middleware('auth:sanctum')->group(function () {
+    Route::post("/create", "store");  // Route to create a resource
+    Route::get("/get", "index");  // Route to get all resources
+    Route::get('/get/{id}', 'show');  // Route to get a specific resource by ID
+    Route::put("/update/{id}", "update");  // Route to update a resource
+    Route::delete("/delete/{id}", "destroy");  // Route to delete a resource
+    Route::post('/upload-files', 'uploadFiles');  // Route for handling file uploads (if necessary)
 });
 
 
