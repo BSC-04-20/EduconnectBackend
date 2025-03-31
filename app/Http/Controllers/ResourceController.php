@@ -12,10 +12,11 @@ use Illuminate\Support\Facades\Storage;
 class ResourceController extends Controller
 {
     /**
+     * Store
+     * 
      * Store a newly created resource in storage.
      */
-    public function store(ResourceRequest $request)
-    {
+    public function store(ResourceRequest $request){
         $resource = new Resource();
         $resource->class_id = $request->class_id;
         $resource->title = $request->title;
@@ -54,15 +55,36 @@ class ResourceController extends Controller
     }
 
     /**
+     * Show
+     * 
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        $resource = Resource::findOrFail($id);
-        return response()->json($resource);
-    }
+    
+     public function show(string $id)
+     {
+         // Check if the resource exists
+         $resource = Resource::with('files')->find($id);
+     
+         if (!$resource) {
+             return response()->json([
+                 'success' => false,
+                 'message' => 'Resource not found'
+             ], 404);
+         }
+     
+         return response()->json([
+             'success' => true,
+             'data' => [
+                 'resource' => $resource->only(['id', 'title', 'description', 'class_id']),
+                 'files' => $resource->files->pluck('file_path') // Return only file paths
+             ]
+         ], 200);
+     }     
+    
 
     /**
+     * Update
+     * 
      * Update the specified resource in storage.
      */
     public function update(ResourceRequest $request, string $id)
@@ -77,15 +99,33 @@ class ResourceController extends Controller
     }
 
     /**
+     * Delete
+     * 
      * Remove the specified resource from storage.
      */
+    
     public function destroy(string $id)
     {
+        // Find the resource or throw a 404 if not found
         $resource = Resource::findOrFail($id);
+    
+        // Retrieve associated files
+        $resourceFiles = ResourceFile::where('resource_id', $id)->get();
+    
+        // Loop through each file and delete it from storage
+        foreach ($resourceFiles as $file) {
+            // Delete the file from the storage disk
+            Storage::delete($file->file_path);
+    
+            // Delete the file record in the database
+            $file->delete();
+        }
+        // Now, delete the resource itself
         $resource->delete();
-
+    
+        // Return a success response
         return response()->json([
-            'message' => 'Resource deleted successfully.'
+            'message' => 'Resource and its associated files deleted successfully.'
         ], 200);
-    }
+    }    
 }

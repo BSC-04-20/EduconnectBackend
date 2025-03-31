@@ -16,9 +16,9 @@ class StudentController extends Controller
 {
     //
     
-        /**
-     * Handle an authentication attempt.
-     */
+    /**
+     * Login
+    */
     public function login(Request $request){
         $credentials = $request->validate([
             'email' => ['required', 'email'],
@@ -46,20 +46,28 @@ class StudentController extends Controller
         ]);
     }
 
-    function signup(Request $request){
-        // $validated = $request->validated();
-
+    /** 
+     * Signup
+    */
+    public function signup(Request $request)
+    {
+        // Validate request data
+        $validated = $request->validate([
+            'fullname'    => 'required|string|max:255',
+            'email'       => 'required|email|unique:students,email',
+            'phonenumber' => 'required|string|regex:/^[0-9]{10,15}$/',
+            'password'    => 'required|string|min:8',
+        ]);
+    
+        // Create a new student record
         $student = new Student();
-
-        $student->fullname = $request->fullname;
-        $student->email = $request->email;
-        $student->phonenumber = $request->phonenumber;
-        $student->password = Hash::make($request->input("password"));
-
+        $student->fullname = $validated['fullname'];
+        $student->email = $validated['email'];
+        $student->phonenumber = $validated['phonenumber'];
+        $student->password = Hash::make($validated['password']);
+    
         $student->save();
-
-        // Mail::to("wes@gmail.com")->send(new RegisterMail($student));
-
+    
         return response()->json([
             "message" => "Created Successfully"
         ], 201);
