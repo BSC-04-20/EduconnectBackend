@@ -25,7 +25,7 @@ class ResourceController extends Controller
 
         if ($request->hasFile('files')) {
             $files= $request->file('files');
-            $destinationPath = "C:/Users/Weston/Desktop/resources";
+            $destinationPath = "/var/www/html/educonnect/resources";
             
             // Check if the directory exists, if not, create it
             if (!file_exists($destinationPath)) {
