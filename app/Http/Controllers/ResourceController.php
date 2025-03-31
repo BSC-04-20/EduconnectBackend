@@ -7,6 +7,7 @@ use App\Models\ResourceFile;
 use App\Http\Requests\ResourceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class ResourceController extends Controller
 {
@@ -15,40 +16,40 @@ class ResourceController extends Controller
      */
     public function store(ResourceRequest $request)
     {
-        // Create the resource record using validated data
-        $resource = Resource::create($request->validated());
+        $resource = new Resource();
+        $resource->class_id = $request->class_id;
+        $resource->title = $request->title;
+        $resource->description = $request->description;
 
-        // Check if the user has uploaded files
+        $resource->save();
+
         if ($request->hasFile('files')) {
-            // Loop through the uploaded files
-            foreach ($request->file('files') as $file) {
-                // Define the directory to store the file
-                $destinationPath = '/var/www/html/educonnect/resources';
-
-                // Check if the directory exists, if not, create it
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true); // Create the directory with appropriate permissions
-                }
-
-                // Set the file name (you can modify the name as needed)
-                $fileName = time() . '-' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-
-                // Move the file to the destination directory
-                $file->move($destinationPath, $fileName);
-
-                // Create an entry in the resource_files table
-                ResourceFile::create([
-                    'resource_id' => $resource->id,  // Associate the file with the resource
-                    'file_path' => 'resources/' . $fileName, // Store the relative file path
-                ]);
+            $files= $request->file('files');
+            $destinationPath = "C:/Users/Weston/Desktop/resources";
+            
+            // Check if the directory exists, if not, create it
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true); // Create the directory with appropriate permissions
             }
+
+            // Loop through each file and get the original filename
+            foreach ($request->file("files") as $file) {
+                $file->move($destinationPath, $file->getClientOriginalName());
+            }
+
+            // Create an entry in the resource_files table
+            ResourceFile::create([
+                'resource_id' => $resource->id,  // Associate the file with the resource
+                'file_path' => 'educonnect/resources/' . $file->getClientOriginalName(), // Store the relative file path
+            ]);
+    
+            // Return an array of all uploaded filenames
+            return response()->json(["created" => "yes"]);
         }
 
-        // Return a success response
         return response()->json([
-            'message' => 'Resource created successfully.',
-            'resource' => $resource
-        ], 201);
+            "Message"
+        ]);
     }
 
     /**

@@ -23,6 +23,8 @@ class ResourceRequest extends FormRequest
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'class_id' => 'required|uuid|exists:classes,id', // Foreign key for classes
+            "files" => "required|array",
+            "files.*" => "file"
         ];
     }
 }

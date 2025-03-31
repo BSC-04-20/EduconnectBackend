@@ -69,7 +69,7 @@ Route::prefix("event")->controller(EventController::class)->middleware('auth:san
     Route::get("/get", "get");
 });
 
-Route::prefix("resources")->controller(ResourceController::class)->middleware('auth:sanctum')->group(function () {
+Route::prefix("resources")->controller(ResourceController::class)->group(function () {
     Route::post("/create", "store");  // Route to create a resource
     Route::get("/get", "index");  // Route to get all resources
     Route::get('/get/{id}', 'show');  // Route to get a specific resource by ID
