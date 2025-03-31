@@ -23,32 +23,30 @@ class ResourceController extends Controller
 
         $resource->save();
 
-        if ($request->hasFile('files')) {
-            $files= $request->file('files');
-            $destinationPath = "/var/www/html/educonnect/resources";
+        $files= $request->file('files');
+        $destinationPath = "/var/www/html/educonnect/resources";
             
-            // Check if the directory exists, if not, create it
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true); // Create the directory with appropriate permissions
-            }
+        // Check if the directory exists, if not, create it
+        if (!file_exists($destinationPath)) {
+            mkdir($destinationPath, 0755, true); // Create the directory with appropriate permissions
+        }
 
-            // Loop through each file and get the original filename
-            foreach ($request->file("files") as $file) {
-                $file->move($destinationPath, $file->getClientOriginalName());
-            }
+        // Loop through each file and get the original filename
+        foreach ($request->file("files") as $file) {
+            $file->move($destinationPath, $file->getClientOriginalName());
 
+            
             // Create an entry in the resource_files table
             ResourceFile::create([
                 'resource_id' => $resource->id,  // Associate the file with the resource
                 'file_path' => 'educonnect/resources/' . $file->getClientOriginalName(), // Store the relative file path
             ]);
-    
-            // Return an array of all uploaded filenames
-            return response()->json(["created" => "yes"]);
         }
 
+    
+        // Return an array of all uploaded filenames
         return response()->json([
-            "Message"
+            "created" => "Uploaded successfully"
         ]);
     }
 
