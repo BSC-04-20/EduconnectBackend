@@ -33,13 +33,16 @@ class ResourceController extends Controller
 
         // Loop through each file and get the original filename
         foreach ($request->file("files") as $file) {
-            $file->move($destinationPath, $file->getClientOriginalName());
+            $fileExtension = $file->getClientOriginalExtension();
+            $fileName = time() . '-' . Str::random(10) . '.' . $fileExtension;
+
+            $file->move($destinationPath, $fileName);
 
             
             // Create an entry in the resource_files table
             ResourceFile::create([
                 'resource_id' => $resource->id,  // Associate the file with the resource
-                'file_path' => 'educonnect/resources/' . $file->getClientOriginalName(), // Store the relative file path
+                'file_path' => 'educonnect/resources/' . $fileName, // Store the relative file path
             ]);
         }
 

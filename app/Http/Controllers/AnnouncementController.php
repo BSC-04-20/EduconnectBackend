@@ -37,6 +37,7 @@ class AnnouncementController extends Controller
 
         // Check if multiple files are uploaded
         if ($request->hasFile('announcement_files')) {
+            
             $request->validate([
                 'announcement_files.*' => 'file', // Validate each file
             ]);
@@ -60,6 +61,10 @@ class AnnouncementController extends Controller
                     'file_path' => 'educonnect/announcement/' . $fileName,
                 ]);
             }
+
+            return response()->json([
+                "message" => "Announcement and files uploade successfully"
+            ], 201);
         }
 
         return response()->json([
