@@ -96,6 +96,7 @@ class AnnouncementController extends Controller
             "lecture_name" => $lecture ? $lecture->fullname : "Unknown",
             "title" => $announcement->title,
             "description" => $announcement->description,
+            "posted"=> $announcement->created_at,
             "files" => $announcement->files->pluck("file_path")
         ]);
     }
