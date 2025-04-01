@@ -8,7 +8,6 @@ use App\Http\Requests\StudentRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\RegisterMail;
 use Illuminate\Http\JsonResponse;
 
 

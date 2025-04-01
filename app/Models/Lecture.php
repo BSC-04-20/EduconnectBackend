@@ -17,4 +17,9 @@ class Lecture extends Authenticatable
     public $timestamps = true;
     protected $fillable = ["fullname", "email", "phonenumber", "password"];
     protected $hidden = ["password"];
+
+    public function classes()
+    {
+        return $this->hasMany(ClassModel::class, 'lecture_id');
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AnnouncementRequest;
 use App\Models\Announcement;
 use App\Models\AnnouncementFile;
+use App\Models\Lecture;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +13,8 @@ use Illuminate\Http\JsonResponse;
 class AnnouncementController extends Controller
 {
     /**
+     * Index
+     * 
      * Display a listing of the resource.
      */
     public function index(){
@@ -24,14 +27,12 @@ class AnnouncementController extends Controller
         ], 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
 
+    /**
+     * Store
+     * 
+     * Post a a resource
+     */
     public function store(AnnouncementRequest $request) {
         $announcement = Announcement::create($request->validated());
 
@@ -63,7 +64,7 @@ class AnnouncementController extends Controller
             }
 
             return response()->json([
-                "message" => "Announcement and files uploade successfully"
+                "message" => "Announcement and files uploaded successfully"
             ], 201);
         }
 
@@ -73,22 +74,35 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Show
+     * 
+     * Display the specified announcement. Pass the announcement id
      */
     public function show(string $id)
     {
-        //
+        // Fetch the announcement along with its related class and files
+        $announcement = Announcement::with(['class', 'files'])->find($id);
+
+        if (!$announcement) {
+            return response()->json(["message" => "Announcement not found"], 404);
+        }
+
+        // Get the lecture associated with the class
+        $lecture = Lecture::whereHas('classes', function ($query) use ($announcement) {
+            $query->where('id', $announcement->class_id);
+        })->first();
+
+        return response()->json([
+            "lecture_name" => $lecture ? $lecture->fullname : "Unknown",
+            "title" => $announcement->title,
+            "description" => $announcement->description,
+            "files" => $announcement->files->pluck("file_path")
+        ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
+     * Update
+     * 
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
@@ -97,6 +111,8 @@ class AnnouncementController extends Controller
     }
 
     /**
+     * Delete
+     * 
      * Remove the specified resource from storage.
      */
     

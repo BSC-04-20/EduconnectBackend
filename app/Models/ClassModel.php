@@ -20,4 +20,14 @@ class ClassModel extends Model
     {
         return $this->belongsToMany(Student::class, 'classstudents', 'classe_id', 'student_id');
     }
+
+    public function lecture()
+    {
+        return $this->belongsTo(Lecture::class, 'lecture_id');
+    }
+
+    public function announcements()
+    {
+        return $this->hasMany(Announcement::class, 'class_id');
+    }
 }

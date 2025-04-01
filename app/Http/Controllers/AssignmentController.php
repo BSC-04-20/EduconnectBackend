@@ -10,6 +10,8 @@ use Illuminate\Http\JsonResponse;
 class AssignmentController extends Controller
 {
     /**
+     * Store
+     * 
      * Create a new assignment.
      */
     public function store(AssignmentRequest $request)
@@ -22,6 +24,8 @@ class AssignmentController extends Controller
     }
 
     /**
+     * Index
+     * 
      * Get all assignments.
      */
     public function index()
@@ -30,7 +34,9 @@ class AssignmentController extends Controller
     }
 
     /**
-     * Get a specific assignment.
+     * Show
+     * 
+     * Get a specific assignment specified bt assignment id.
      */
     public function show($id)
     {
@@ -40,7 +46,9 @@ class AssignmentController extends Controller
     }
 
     /**
-     * Update an assignment.
+     * Update
+     * 
+     * Update an assignment specified by an assignment id.
      */
     public function update(AssignmentRequest $request, $id)
     {
@@ -53,7 +61,9 @@ class AssignmentController extends Controller
     }
 
     /**
-     * Delete an assignment.
+     * Delete
+     * 
+     * Delete an assignment by an assignment id.
      */
     public function destroy($id)
     {
@@ -61,5 +71,14 @@ class AssignmentController extends Controller
         $assignment->delete();
 
         return response()->json(['message' => 'Assignment deleted successfully.']);
+    }
+
+    /**
+     * Submit
+     * 
+     * Submit an assignment
+     */
+    public function submit($id){
+        
     }
 }
