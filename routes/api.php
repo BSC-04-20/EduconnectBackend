@@ -44,6 +44,7 @@ Route::prefix("classes")->controller(ClassController::class)->middleware('auth:s
 
 Route::prefix("announcement")
     ->controller(AnnouncementController::class)
+    ->middleware('auth:sanctum')
     ->group(function () {
         Route::post("/create", "store");
         Route::get("/get", "index");
