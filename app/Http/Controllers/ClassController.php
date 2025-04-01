@@ -141,11 +141,11 @@ public function getCombinedAssignmentsAndAnnouncements($classId)
 {
     // Get announcements and assignments combined for a specific class
     $announcements = DB::table('announcements')
-        ->select('title', 'description', 'created_at', DB::raw("'announcement' as type"))
+        ->select('id', 'title', 'description', 'created_at', DB::raw("'announcement' as type"))
         ->where('class_id', $classId)  // Filter by class_id
         ->union(
             DB::table('assignments')
-                ->select('title', 'description', 'created_at', DB::raw("'assignment' as type"))
+                ->select('id', 'title', 'description', 'created_at', DB::raw("'assignment' as type"))
                 ->where('class_id', $classId)  // Filter by class_id
         )
         ->orderBy('created_at', 'desc') // Sort by created_at in descending order
