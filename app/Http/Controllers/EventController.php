@@ -11,7 +11,9 @@ use Illuminate\Http\JsonResponse;
 class EventController extends Controller
 {
     //
-/**
+    /**
+     * Store
+     * 
      * Store a newly created event.
      */
     public function store(EventRequest $request)
@@ -32,8 +34,13 @@ class EventController extends Controller
         ], 201);
     }
 
+    /**
+     * UserEvents
+     * 
+     * Get all events for current user
+     * 
+     */
     function get(Request $request){
-            // Retrieve all events where the 'user_id' matches the provided one
         $events = Event::where('user_id', $request->user()->id)->get();
 
         // Return the events as a JSON response

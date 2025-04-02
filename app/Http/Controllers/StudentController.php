@@ -72,6 +72,11 @@ class StudentController extends Controller
         ], 201);
     }
 
+    /**
+     * Logout
+     * 
+     * Unauthenticating student
+     */
     public function logout(Request $request){
         // Revoke the current user's token
         $request->user()->currentAccessToken()->delete();

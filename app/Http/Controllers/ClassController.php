@@ -13,8 +13,11 @@ use Illuminate\Http\JsonResponse;
 
 class ClassController extends Controller
 {
-    //
-
+    /**
+     * Create
+     * 
+     * Create a class
+     */
     function create(Request $request){
 
         $class = new ClassModel();
@@ -48,6 +51,12 @@ class ClassController extends Controller
         return $classCode;
     }
 
+    /**
+     * getLecturerClasses
+     * 
+     * Return all classes for a lecturer
+     */
+
     public function lectureClasses(Request $request){
 
         $classes = ClassModel::where('lecture_id', $request->user()->id)->get();
@@ -57,6 +66,13 @@ class ClassController extends Controller
             'data' => $classes
         ], 200);
     }
+
+    /**
+     * getClassDetails
+     * 
+     * This will return details about a selected class. It will return the total number of enrolled students, an array of announcements and assignmnets combined
+     * , the name of the class and its class code
+     */
 
     public function getClassById($id){
         // Find the class by its ID
@@ -79,7 +95,11 @@ class ClassController extends Controller
         ], 200);
     }
 
-
+    /**
+     * Join
+     * 
+     * Joining a class by class code
+     */
     public function join(Request $request){
         // Validate the request
         $request->validate([
@@ -111,6 +131,12 @@ class ClassController extends Controller
         ], 201);
     }
 
+    /**
+     * getStudentClasses
+     * 
+     * Return all classes joined by a student
+     */
+
     public function studentClasses(Request $request){
         $classes = ClassStudents::where('student_id', $request->user()->id)
             ->join('classes', 'classstudents.classe_id', '=', 'classes.id') // Join with ClassModel
@@ -121,15 +147,12 @@ class ClassController extends Controller
             'data' => $classes
         ], 200);
     }
-
-    public function studClass(Request $request){
-        $classes = ClassStudents::where('student_id', $request->user()->id)
-        ->join('classes', 'classstudents.classe_id', '=', 'classes.id') // Join with ClassModel
-        ->join('lectures', 'classes.lecture_id', '=', 'lectures.id') // Join with Lecture
-        ->get(['classes.name as class_name', 'lectures.fullname as lecture_name']);
-        return $classes;
-    }
     
+    /**
+     * getClassStudents
+     * 
+     * Return all students for a given class
+     */
     public function getStudents($classId){
         $class = ClassModel::with('students')->findOrFail($classId);
         return response()->json([
@@ -137,8 +160,13 @@ class ClassController extends Controller
             "students"=>$class->students]);
     }
 
-public function getCombinedAssignmentsAndAnnouncements($classId)
-{
+    /**
+     * announcementsAndResources
+     * 
+     * This will combine all announcements and resources for a given class
+     */
+    public function getCombinedAssignmentsAndAnnouncements($classId)
+    {
     // Get announcements and assignments combined for a specific class
     $announcements = DB::table('announcements')
         ->select('title', 'description', 'created_at', DB::raw("'announcement' as type"))
@@ -151,7 +179,6 @@ public function getCombinedAssignmentsAndAnnouncements($classId)
         ->orderBy('created_at', 'desc') // Sort by created_at in descending order
         ->get();
 
-    return $announcements;
-}
-
+        return $announcements;
+    }   
 }

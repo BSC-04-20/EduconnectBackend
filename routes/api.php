@@ -15,7 +15,6 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::get("/trial", [LectureController::class, 'show']);
-Route::post('/login', [LectureController::class, 'login']);
 
 Route::post("/lecture/signup", [LectureController::class, "signup"]);
 Route::post("/lecture/login", [LectureController::class, "login"]);

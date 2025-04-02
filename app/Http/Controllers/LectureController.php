@@ -11,12 +11,18 @@ use Illuminate\Http\JsonResponse;
 
 class LectureController extends Controller
 {
-    //
+    /**
+     * Trial
+     * 
+     * This is a method to call if you want to try to check ig the api is running.
+     */
     function show(){
-        return("Heelo");
+        return("Hello from educonnect api.");
     }
     /**
-     * Handle an authentication attempt.
+     * Login
+     * 
+     * Handle an authentication attempt. Method for a lecturer login
      */
     public function login(Request $request){
         $credentials = $request->validate([
@@ -45,6 +51,11 @@ class LectureController extends Controller
         ]);
     }
 
+    /**
+     * Logout
+     * 
+     * Unauthenticating lecturer
+     */
     public function logout(Request $request)
     {
         // Revoke the current user's token
@@ -55,6 +66,11 @@ class LectureController extends Controller
         ], 200);
     }
 
+    /**
+     * Signup
+     * 
+     * Registering lecturer
+     */
     function signup(LectureRequest $request):JsonResponse {
             $validated = $request->validated();
 
