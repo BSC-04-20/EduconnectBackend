@@ -102,8 +102,7 @@ class AssignmentController extends Controller
             'assignment_id' => $assignmentId,
         ]);
 
-        // $destination = "/var/www/html/educonnect/submissions";
-        $destination = "C:/Users/Weston/Desktop/submissions";
+        $destination = "/var/www/html/educonnect/submissions";
 
         // Ensure the directory exists
         if (!file_exists($destination)) {
@@ -114,7 +113,6 @@ class AssignmentController extends Controller
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
                 $filename = time() . Str::random(10) . $file->getClientOriginalExtension();
-                $filePath = "/var/www/html/educonnect/submissions/" . $filename;
                 $file->move($destination, $filename); // Move file to target directory
 
                 // Save file path to database
