@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\JsonResponse;
+use App\Models\Lecture;
 
 
 class StudentController extends Controller
@@ -79,5 +80,23 @@ class StudentController extends Controller
         return response()->json([
             'message' => 'Logged out successfully'
         ], 200);
+    }
+
+    /**
+     * Lecturers
+     * 
+     * Get all lecturer names for student.
+     */
+    public function getStudentLecturers(){
+        $student = Auth::user(); // Get the authenticated student
+
+        // Fetch lecture names associated with the authenticated student
+        $lecturers = Lecture::whereHas('classes.classstudents', function ($query) use ($student) {
+            $query->where('student_id', $student->id);
+        })->pluck('id', 'fullname');
+
+        return response()->json([
+            'lecturers' => $lecturers
+        ]);
     }
 }

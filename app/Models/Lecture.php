@@ -22,4 +22,9 @@ class Lecture extends Authenticatable
     {
         return $this->hasMany(ClassModel::class, 'lecture_id');
     }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class, 'lecture_id');
+    }
 }

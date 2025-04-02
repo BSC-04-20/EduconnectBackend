@@ -6,6 +6,9 @@ use App\Http\Requests\AssignmentRequest;
 use App\Models\Assignment;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Models\Submission;
+use App\Models\SubmissionFiles;
+use Illuminate\Support\Str;
 
 class AssignmentController extends Controller
 {
@@ -78,7 +81,52 @@ class AssignmentController extends Controller
      * 
      * Submit an assignment
      */
-    public function submit($id){
-        
-    }
+    public function submit(Request $request, $assignmentId){
+        $request->validate([
+            'files' => 'required|array',
+            'files.*' => 'file', // Allow multiple file types
+        ]);
+
+        // Ensure the assignment exists
+        $assignment = Assignment::find($assignmentId);
+        if (!$assignment) {
+            return response()->json(["message" => "Assignment not found"], 404);
+        }
+
+        // Get authenticated student ID
+        $studentId = auth()->id();
+
+        // Create a submission record
+        $submission = Submission::create([
+            'student_id' => $studentId,
+            'assignment_id' => $assignmentId,
+        ]);
+
+        // $destination = "/var/www/html/educonnect/submissions";
+        $destination = "C:/Users/Weston/Desktop/submissions";
+
+        // Ensure the directory exists
+        if (!file_exists($destination)) {
+            mkdir($destination, 0755, true);
+        }
+
+        // Store each file
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $filename = time() . Str::random(10) . $file->getClientOriginalExtension();
+                $filePath = "/var/www/html/educonnect/submissions/" . $filename;
+                $file->move($destination, $filename); // Move file to target directory
+
+                // Save file path to database
+                SubmissionFiles::create([
+                    'submission_id' => $submission->id,
+                    'file_path' => "educonnect/submissions/" . $filename,
+                ]);
+            }
+        }
+
+        return response()->json([
+            "message" => "Assignment submitted successfully"
+            ], 201);
+        }
 }

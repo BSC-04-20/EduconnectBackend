@@ -9,6 +9,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\ResourceController;
+use App\Http\Controllers\RatingsController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -29,6 +30,7 @@ Route::prefix("lecture")->controller(LectureController::class)->middleware('auth
 
 Route::prefix("student")->controller(StudentController::class)->middleware('auth:sanctum')->group(function (){
     Route::post("/logout", "logout");
+    Route::get("/lecturers", "getStudentLecturers");
 });
 
 
@@ -58,6 +60,7 @@ Route::prefix("assignment")
     ->middleware('auth:sanctum')
     ->group(function () {
         Route::post("/create", "store"); // Create an assignment
+        Route::post("/submit/{assignmentId}", "submit");
         Route::get("/get", "index"); // Get all assignments
         Route::get("/get/{id}", "show"); // Get a specific assignment
         Route::put("/update/{id}", "update"); // Update an assignment
@@ -78,4 +81,6 @@ Route::prefix("resources")->controller(ResourceController::class)->middleware('a
     Route::post('/upload-files', 'uploadFiles');  // Route for handling file uploads (if necessary)
 });
 
-
+Route::prefix("ratings")->controller(RatingsController::class)->middleware('auth:sanctum')->group(function () {
+    Route::post("/rate/{lectureId}", "rateLecture");
+});

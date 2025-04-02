@@ -11,4 +11,9 @@ class ClassStudents extends Model
     public $timestamps = true;
     protected $fillable = ["classe_student", "student_id"];
     protected $hidden = ["updated_at"];
+
+    public function classstudents()
+    {
+        return $this->hasMany(ClassStudent::class, 'classe_id');
+    }
 }

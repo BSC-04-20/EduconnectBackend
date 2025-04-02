@@ -152,6 +152,5 @@ public function getCombinedAssignmentsAndAnnouncements($classId)
         ->get();
 
     return $announcements;
-}
-
+    }
 }

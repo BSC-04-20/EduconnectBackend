@@ -22,4 +22,10 @@ class Student extends Authenticatable
     {
         return $this->belongsToMany(ClassModel::class, 'classstudents', 'student_id', 'classe_id');
     }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class, 'student_id');
+    }
+
 }

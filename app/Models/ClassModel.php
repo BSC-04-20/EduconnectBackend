@@ -26,6 +26,11 @@ class ClassModel extends Model
         return $this->belongsTo(Lecture::class, 'lecture_id');
     }
 
+    public function classstudents()
+    {
+        return $this->hasMany(ClassStudents::class, 'classe_id');
+    }
+
     public function announcements()
     {
         return $this->hasMany(Announcement::class, 'class_id');
