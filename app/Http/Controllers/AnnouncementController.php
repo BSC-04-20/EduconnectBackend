@@ -9,6 +9,7 @@ use App\Models\Lecture;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\File;
 
 class AnnouncementController extends Controller
 {
@@ -29,7 +30,7 @@ class AnnouncementController extends Controller
 
 
     /**
-     * Store
+     * Create
      * 
      * Post a a resource
      */
@@ -38,10 +39,6 @@ class AnnouncementController extends Controller
 
         // Check if multiple files are uploaded
         if ($request->hasFile('announcement_files')) {
-            
-            $request->validate([
-                'announcement_files.*' => 'file', // Validate each file
-            ]);
 
             $destinationPath = '/var/www/html/educonnect/announcement';
 
@@ -114,26 +111,24 @@ class AnnouncementController extends Controller
     /**
      * Delete
      * 
-     * Remove the specified resource from storage.
+     * Remove the specified announcement from storage.
      */
-    
-    public function destroy(string $id){
+    public function destroy(string $announcementId){
         // Find the announcement by its ID
-        $announcement = Announcement::findOrFail($id);
+        $announcement = Announcement::findOrFail($announcementId);
     
         // Check if there are any associated files
         $announcementFiles = AnnouncementFile::where('announcement_id', $announcement->id)->get();
     
         if ($announcementFiles->isNotEmpty()) {
+            
             // If there are files, delete each file from the file system
             foreach ($announcementFiles as $file) {
-                $filePath = public_path($file->file_path); // Get the full file path
+                $filePath = $file->file_path; // Get the full file path
                 
-                // Check if the file exists and delete it
-                if (file_exists($filePath)) {
-                    unlink($filePath); // Delete the file
-                }
-    
+                //Delete the file
+                File::delete('/var/www/html/' . $filePath);
+                
                 // Delete the record from the 'announcement_files' table
                 $file->delete();
             }
@@ -143,7 +138,7 @@ class AnnouncementController extends Controller
         $announcement->delete();
     
         return response()->json([
-            'message' => 'Announcement and associated files deleted successfully, if any.'
+            'message' => 'Announcement deleted successfully'
         ], 200);
     }
 }

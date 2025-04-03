@@ -8,6 +8,7 @@ use App\Http\Requests\ResourceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 
 class ResourceController extends Controller
 {
@@ -115,7 +116,7 @@ class ResourceController extends Controller
         // Loop through each file and delete it from storage
         foreach ($resourceFiles as $file) {
             // Delete the file from the storage disk
-            Storage::delete($file->file_path);
+            File::delete('/var/www/html/' . $file->file_path);
     
             // Delete the file record in the database
             $file->delete();
