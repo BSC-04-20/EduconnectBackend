@@ -32,7 +32,6 @@ Route::prefix("student")->controller(StudentController::class)->middleware('auth
     Route::get("/lecturers", "getStudentLecturers");
 });
 
-
 Route::prefix("classes")->controller(ClassController::class)->middleware('auth:sanctum')->group(function (){
     Route::post("/create", "create");
     Route::post("/join", "join");
@@ -51,7 +50,7 @@ Route::prefix("announcement")
         Route::get("/get", "index");
         Route::get("/get/{id}", "show");
         Route::put("/update/{id}", "update");
-        Route::delete("/delete/{id}", "destroy");
+        Route::delete("/delete/{announcementId}", "destroy");
     });
 
 Route::prefix("assignment")
@@ -82,4 +81,6 @@ Route::prefix("resources")->controller(ResourceController::class)->middleware('a
 
 Route::prefix("ratings")->controller(RatingsController::class)->middleware('auth:sanctum')->group(function () {
     Route::post("/rate/{lectureId}", "rateLecture");
+    Route::get("/get", "getUserAverageRating");
 });
+

@@ -112,7 +112,7 @@ class AssignmentController extends Controller
         // Store each file
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
-                $filename = time() . Str::random(10) . $file->getClientOriginalExtension();
+                $filename = time() . Str::random(10) .".". $file->getClientOriginalExtension();
                 $file->move($destination, $filename); // Move file to target directory
 
                 // Save file path to database

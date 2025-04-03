@@ -10,6 +10,7 @@ class RatingsController extends Controller{
     /**
      * Rate
      * 
+     * Rate lecturer
      */
     public function rateLecture(Request $request,$lectureId)
     {
@@ -29,4 +30,25 @@ class RatingsController extends Controller{
         return response()->json(["message" => "Rating submitted successfully"]);
     }
 
+    /**
+     * Rate
+     * 
+     * Get the average rating for the current authenticated lecture
+     */
+    public function getUserAverageRating()
+    {
+        $lectureId = auth()->id();
+        
+        // Calculate average rating
+        $averageRating = Rating::where('lecture_id', $lectureId)
+            ->avg('rating');
+            
+        // Format the average to 2 decimal places
+        $formattedAverage = number_format((float)$averageRating, 2, '.', '');
+
+        return response()->json([
+            'average_rating' => $formattedAverage,
+            'total_ratings' => Rating::where('lecture_id', $lectureId)->count()
+        ]);
+    }
 }
