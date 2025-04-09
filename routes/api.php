@@ -63,6 +63,8 @@ Route::prefix("assignment")
         Route::get("/get/{id}", "show"); // Get a specific assignment
         Route::put("/update/{id}", "update"); // Update an assignment
         Route::delete("/delete/{id}", "destroy"); // Delete an assignment
+        Route::post("/mark/{submissionId}", "mark");
+        Route::get("/mark/{submissionId}", "getMarks");
     });
 
 Route::prefix("event")->controller(EventController::class)->middleware('auth:sanctum')->group(function (){
@@ -77,10 +79,12 @@ Route::prefix("resources")->controller(ResourceController::class)->middleware('a
     Route::put("/update/{id}", "update");  // Route to update a resource
     Route::delete("/delete/{id}", "destroy");  // Route to delete a resource
     Route::post('/upload-files', 'uploadFiles');  // Route for handling file uploads (if necessary)
+    Route::get("/lecture", "getAllResourcesForAuthenticatedLecture");
 });
 
 Route::prefix("ratings")->controller(RatingsController::class)->middleware('auth:sanctum')->group(function () {
     Route::post("/rate/{lectureId}", "rateLecture");
     Route::get("/get", "getUserAverageRating");
+    Route::get("/get/{lectureId}", "getLectureRating");
 });
 

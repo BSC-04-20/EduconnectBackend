@@ -16,7 +16,6 @@ return new class extends Migration
             $table->uuid('resource_id'); // Foreign key to the resources table
             $table->string('file_path'); // Path to the uploaded file
             $table->timestamps(); // Timestamps for created_at and updated_at
-
             // Foreign key constraint
             $table->foreign('resource_id')->references('id')->on('resources')->onDelete('cascade');
         });

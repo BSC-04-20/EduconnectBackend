@@ -39,7 +39,11 @@ class AnnouncementController extends Controller
 
         // Check if multiple files are uploaded
         if ($request->hasFile('announcement_files')) {
-
+            
+            // return response()->json([
+            //     "files" -> $request->announcement_files
+            // ], 201);
+            
             $destinationPath = '/var/www/html/educonnect/announcement';
 
             // Ensure the directory exists

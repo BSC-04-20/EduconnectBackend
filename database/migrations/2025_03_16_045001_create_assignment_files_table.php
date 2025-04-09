@@ -13,6 +13,7 @@ return new class extends Migration {
         Schema::create('assignment_files', function (Blueprint $table) {
             $table->uuid('id')->primary(); // UUID as primary key
             $table->uuid('assignment_id'); // Foreign key referencing assignments
+            $table->string("file_name");
             $table->string('file_path'); // Path where the file is stored
             $table->timestamps();
 

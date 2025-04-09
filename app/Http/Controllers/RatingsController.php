@@ -5,23 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Rating;
 use Illuminate\Http\Request;
 
-class RatingsController extends Controller{
-    
+class RatingsController extends Controller
+{
     /**
-     * Rate
-     * 
-     * Rate lecturer
+     * Submit a rating for a lecture.
      */
-    public function rateLecture(Request $request,$lectureId)
+    public function rateLecture(Request $request, $lectureId)
     {
         $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
+            'rating' => 'required|integer|min:1|max:5'
         ]);
 
         // Assuming the student is logged in
         $studentId = auth()->id();
 
-        // Store the rating
+        // Store or update the rating
         $rating = Rating::updateOrCreate(
             ['student_id' => $studentId, 'lecture_id' => $lectureId],
             ['rating' => $request->rating]
@@ -31,24 +29,31 @@ class RatingsController extends Controller{
     }
 
     /**
-     * Rate
-     * 
-     * Get the average rating for the current authenticated lecture
+     * Get average rating for the currently authenticated lecturer.
      */
     public function getUserAverageRating()
     {
         $lectureId = auth()->id();
-        
-        // Calculate average rating
-        $averageRating = Rating::where('lecture_id', $lectureId)
-            ->avg('rating');
-            
-        // Format the average to 2 decimal places
+
+        $averageRating = Rating::where('lecture_id', $lectureId)->avg('rating');
         $formattedAverage = number_format((float)$averageRating, 2, '.', '');
 
         return response()->json([
             'average_rating' => $formattedAverage,
             'total_ratings' => Rating::where('lecture_id', $lectureId)->count()
+        ]);
+    }
+
+    /**
+     * Get average rating for a specific lecture by ID.
+     */
+    public function getLectureRating($lectureId)
+    {
+        $averageRating = Rating::where('lecture_id', $lectureId)->avg('rating');
+        $formattedAverage = number_format((float)$averageRating, 2, '.', '');
+
+        return response()->json([
+            'average_rating' => $formattedAverage,
         ]);
     }
 }

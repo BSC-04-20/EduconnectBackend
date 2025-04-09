@@ -28,4 +28,20 @@ class Student extends Authenticatable
         return $this->hasMany(Rating::class, 'student_id');
     }
 
+    public function lecturers()
+    {
+        return $this->classes()->with('lecturer')->get()->pluck('lecturer')->unique('id')->values();
+    }
+
+    // Relationship with Submissions
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(Submission::class);
+    }
+    
+    // Relationship with Markings through Submissions
+    public function markings(): HasManyThrough
+    {
+        return $this->hasManyThrough(Marking::class, Submission::class);
+    }
 }

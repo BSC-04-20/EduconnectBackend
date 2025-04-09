@@ -14,7 +14,7 @@ class ResourceFile extends Model
     public $incrementing = false; // Disable auto-incrementing
 
     protected $fillable = [
-        'resource_id', 'file_path',
+        'resource_id', 'file_path','resource_name'
     ];
 
     // Relationship to the Resource model

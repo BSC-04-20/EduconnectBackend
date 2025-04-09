@@ -28,4 +28,16 @@ class Submission extends Model
     {
         return $this->hasMany(SubmissionFile::class);
     }
+
+    // Relationship with Student
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+    // Relationship with Marking
+    public function marking()
+    {
+        return $this->hasOne(Marking::class);
+    }
 }

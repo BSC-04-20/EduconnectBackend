@@ -24,6 +24,8 @@ class AssignmentRequest extends FormRequest
             'description' => 'required|string',
             'due_date' => 'required|date_format:Y-m-d H:i:s',
             'class_id' => 'required|uuid|exists:classes,id',
+            'files' => 'nullable|array',
+            'files.*' => 'file'
         ];
     }
 }

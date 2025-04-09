@@ -27,7 +27,7 @@ class ResourceController extends Controller
 
         $files= $request->file('files');
         $destinationPath = "/var/www/html/educonnect/resources";
-            
+
         // Check if the directory exists, if not, create it
         if (!file_exists($destinationPath)) {
             mkdir($destinationPath, 0755, true); // Create the directory with appropriate permissions
@@ -36,6 +36,7 @@ class ResourceController extends Controller
         // Loop through each file and get the original filename
         foreach ($request->file("files") as $file) {
             $fileExtension = $file->getClientOriginalExtension();
+            $actualMame= $file->getClientOriginalName();
             $fileName = time() . '-' . Str::random(10) . '.' . $fileExtension;
 
             $file->move($destinationPath, $fileName);
@@ -44,6 +45,7 @@ class ResourceController extends Controller
             // Create an entry in the resource_files table
             ResourceFile::create([
                 'resource_id' => $resource->id,  // Associate the file with the resource
+                "resource_name"=> $actualMame,
                 'file_path' => 'educonnect/resources/' . $fileName, // Store the relative file path
             ]);
         }
@@ -129,4 +131,25 @@ class ResourceController extends Controller
             'message' => 'Resource and its associated files deleted successfully.'
         ], 200);
     }    
+
+    /**
+     * LectureResources
+     * 
+     * Return all resources for the authenticated lecture.
+     */
+    public function getAllResourcesForAuthenticatedLecture(Request $request)
+    {
+        // Get the authenticated lecture (assuming Sanctum is used)
+        $lecture = $request->user();
+
+        // Get all resources where the class belongs to this lecture
+        $resources = Resource::whereHas('class', function ($query) use ($lecture) {
+            $query->where('lecture_id', $lecture->id);
+        })->with(['files', 'class'])->get();
+
+        return response()->json([
+            'resources_count' => $resources->count(),
+            'resources' => $resources->pluck(["files"])
+        ]);
+    }
 }

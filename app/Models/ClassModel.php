@@ -35,4 +35,7 @@ class ClassModel extends Model
     {
         return $this->hasMany(Announcement::class, 'class_id');
     }
+    public function resources(){
+        return $this->hasMany(Resource::class, 'class_id');
+    }
 }
