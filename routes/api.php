@@ -43,6 +43,7 @@ Route::prefix("classes")->controller(ClassController::class)->middleware('auth:s
     Route::post('/{classId}/discussion', 'createDiscussion');
     Route::get('/{classId}/discussions', "getByClassId");
     Route::get("/discussions/student", "getStudentDiscussions");
+    Route::get("/discussion/{discussionId}", "getDiscussionById");
 });
 
 Route::prefix("announcement")

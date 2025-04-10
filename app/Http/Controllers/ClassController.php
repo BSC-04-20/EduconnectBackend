@@ -260,4 +260,27 @@ class ClassController extends Controller
             'discussions' => $discussions,
         ]);
     }
+
+    /**
+     * Get a single discussion
+     * 
+     * Get a single discussion by its ID.
+     */
+    public function getDiscussionById($discussionId)
+    {
+        // Fetch the discussion by its ID
+        $discussion = Discussion::find($discussionId);
+
+        // If the discussion is not found, return an error message
+        if (!$discussion) {
+            return response()->json([
+                'message' => 'Discussion not found.',
+            ], 404);
+        }
+
+        // Return the discussion data as a JSON response
+        return response()->json([
+            'discussion' => $discussion,
+        ], 200);
+    }
 }
