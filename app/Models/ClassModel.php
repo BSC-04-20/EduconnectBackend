@@ -38,4 +38,9 @@ class ClassModel extends Model
     public function resources(){
         return $this->hasMany(Resource::class, 'class_id');
     }
+
+    public function discussions()
+    {
+        return $this->hasMany(Discussion::class, 'class_id');
+    }
 }

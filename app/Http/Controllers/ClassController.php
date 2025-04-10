@@ -9,7 +9,10 @@ use App\Models\ClassModel;
 use App\Models\ClassStudents;
 use App\Models\Announcement;
 use App\Models\Lecture;
-use Illuminate\Http\JsonResponse;  
+use Illuminate\Http\JsonResponse;
+use Carbon\Carbon;
+use App\Models\Discussion;
+use Illuminate\Support\Facades\Auth;  
 
 class ClassController extends Controller
 {
@@ -181,4 +184,80 @@ class ClassController extends Controller
 
         return $announcements;
     }   
+
+    /**
+     * Create Discussion
+     * 
+     * This will create a discussion for students in a specific class only
+     */
+    public function createDiscussion(Request $request, $classId)
+    {
+        $request->validate([
+            'meeting_name' => 'required|string|max:255',
+            'start_time' => 'required|date',
+        ]);
+    
+        $discussion = Discussion::create([
+            'class_id' => $classId,
+            'meeting_name' => $request->meeting_name,
+            'start_time' => Carbon::parse($request->start_time),
+            // meeting_identifier will be generated in the model if not provided
+        ]);
+    
+        return response()->json([
+            'message' => 'Discussion created successfully.',
+            'data' => $discussion,
+        ], 201);
+    }
+
+    /**
+     * Get Class Discussions
+     * 
+     * Return all discussions from a certain class
+     */
+    public function getByClassId($classId)
+    {
+        $class = ClassModel::with('discussions')->find($classId);
+
+        if (!$class) {
+            return response()->json([
+                'message' => 'Class not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'class_name' => $class->name,
+            'discussions' => $class->discussions()->orderBy('start_time', 'desc')->get(),
+        ]);
+    }
+
+    /**
+     * Fetch Student Disscussions
+     * 
+     * Fetch all discussions for the authenticated student.
+     */
+    public function getStudentDiscussions(Request $request)
+    {
+        $student = Auth::user(); 
+        $classes = $student->classes; 
+
+        $discussions = [];
+
+        foreach ($classes as $class) {
+            $discussions[] = $class->discussions;  
+        }
+
+        $discussions = collect($discussions)->flatten();
+
+        if ($discussions->isEmpty()) {
+            return response()->json([
+                'message' => 'No discussions found for this student.',
+            ], 404);
+        }
+
+        // Return discussions as a JSON response
+        return response()->json([
+            'discussions' => $discussions,
+        ]);
+    }
 }

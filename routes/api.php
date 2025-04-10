@@ -40,6 +40,9 @@ Route::prefix("classes")->controller(ClassController::class)->middleware('auth:s
     Route::get('/get/{id}/students', 'getStudents');
     Route::get('/get/{id}/all/post', 'getCombinedAssignmentsAndAnnouncements');
     Route::get('/student-classes', 'studentClasses');
+    Route::post('/{classId}/discussion', 'createDiscussion');
+    Route::get('/{classId}/discussions', "getByClassId");
+    Route::get("/discussions/student", "getStudentDiscussions");
 });
 
 Route::prefix("announcement")
