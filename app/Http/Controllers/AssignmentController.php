@@ -12,6 +12,9 @@ use App\Models\Submission;
 use App\Models\SubmissionFiles;
 use Illuminate\Support\Str;
 use App\Models\Marking;
+use App\Models\ClassModel;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NewAssignmentNotification;
 
 class AssignmentController extends Controller
 {
@@ -52,6 +55,14 @@ class AssignmentController extends Controller
                             'file_path' => 'educonnect/assignments/' . $fileName,
                         ]);
                     }
+                }
+
+                $classStudents = ClassModel::with('students')->findOrFail($assignment->class_id);
+                $studentEmails = $classStudents->students->pluck('email');
+
+                // Send notification emails
+                foreach ($studentEmails as $email) {
+                    Mail::to($email)->queue(new NewAssignmentNotification($assignment));
                 }
 
                 DB::commit();
@@ -125,53 +136,67 @@ class AssignmentController extends Controller
      * 
      * Submit an assignment
      */
-    public function submit(Request $request, $assignmentId){
+    public function submit(Request $request, $assignmentId)
+    {
         $request->validate([
             'files' => 'required|array',
             'files.*' => 'file', // Allow multiple file types
         ]);
 
-        // Ensure the assignment exists
-        $assignment = Assignment::find($assignmentId);
-        if (!$assignment) {
-            return response()->json(["message" => "Assignment not found"], 404);
-        }
+        DB::beginTransaction();
 
-        // Get authenticated student ID
-        $studentId = auth()->id();
-
-        // Create a submission record
-        $submission = Submission::create([
-            'student_id' => $studentId,
-            'assignment_id' => $assignmentId,
-        ]);
-
-        $destination = "/var/www/html/educonnect/submissions";
-
-        // Ensure the directory exists
-        if (!file_exists($destination)) {
-            mkdir($destination, 0755, true);
-        }
-
-        // Store each file
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $file) {
-                $filename = time() . Str::random(10) .".". $file->getClientOriginalExtension();
-                $file->move($destination, $filename); // Move file to target directory
-
-                // Save file path to database
-                SubmissionFiles::create([
-                    'submission_id' => $submission->id,
-                    'file_path' => "educonnect/submissions/" . $filename,
-                ]);
+        try {
+            // Ensure the assignment exists
+            $assignment = Assignment::find($assignmentId);
+            if (!$assignment) {
+                return response()->json(["message" => "Assignment not found"], 404);
             }
-        }
 
-        return response()->json([
-            "message" => "Assignment submitted successfully"
+            // Get authenticated student ID
+            $studentId = auth()->id();
+
+            // Create a submission record
+            $submission = Submission::create([
+                'student_id' => $studentId,
+                'assignment_id' => $assignmentId,
+            ]);
+
+            $destination = "/var/www/html/educonnect/submissions";
+
+            // Ensure the directory exists
+            if (!file_exists($destination)) {
+                mkdir($destination, 0755, true);
+            }
+
+            // Store each file
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $filename = time() . Str::random(10) .".". $file->getClientOriginalExtension();
+                    $file->move($destination, $filename); // Move file to target directory
+
+                    // Save file path to database
+                    SubmissionFiles::create([
+                        'submission_id' => $submission->id,
+                        'file_path' => "educonnect/submissions/" . $filename,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                "message" => "Assignment submitted successfully"
             ], 201);
-        }
 
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Failed to submit assignment.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
     /**
      * Mark Assignment
      * 

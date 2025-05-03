@@ -12,7 +12,7 @@ class Resource extends Model
     use HasFactory, HasUuids;
 
     protected $fillable = [
-        'title', 'description', 'class_id', 'files'
+        'title', 'description', 'class_id', 'files',
     ];
 
     // Define the relationship with the Class model

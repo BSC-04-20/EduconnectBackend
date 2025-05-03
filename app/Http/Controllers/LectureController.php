@@ -38,10 +38,6 @@ class LectureController extends Controller
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-
-        //Deleting all previous tokes
-        $user->tokens()->delete();
-
         // Create a new API token
         $token = $user->createToken('API Token')->plainTextToken;
 

@@ -10,6 +10,10 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
+use App\Models\ClassModel;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AnnouncementNotification;
 
 class AnnouncementController extends Controller
 {
@@ -35,43 +39,53 @@ class AnnouncementController extends Controller
      * Post a a resource
      */
     public function store(AnnouncementRequest $request) {
-        $announcement = Announcement::create($request->validated());
-
-        // Check if multiple files are uploaded
-        if ($request->hasFile('announcement_files')) {
+        DB::beginTransaction();
+    
+        try {
+            $announcement = Announcement::create($request->validated());
             
-            // return response()->json([
-            //     "files" -> $request->announcement_files
-            // ], 201);
+            if ($request->hasFile('announcement_files')) {
+                $destinationPath = '/var/www/html/educonnect/announcement';
+    
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+    
+                foreach ($request->file('announcement_files') as $file) {
+                    $fileExtension = $file->getClientOriginalExtension();
+                    $fileName = time() . '-' . Str::random(10) . '.' . $fileExtension;
+    
+                    $file->move($destinationPath, $fileName);
+    
+                    AnnouncementFile::create([
+                        'announcement_id' => $announcement->id,
+                        'file_path' => 'educonnect/announcement/' . $fileName,
+                    ]);
+                }
+            }
             
-            $destinationPath = '/var/www/html/educonnect/announcement';
+            $classStudents = ClassModel::with('students')->findOrFail($announcement->class_id);
+            $studentEmails = $classStudents->students->pluck('email');
 
-            // Ensure the directory exists
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
+            // Send email to each student
+            foreach ($studentEmails as $email) {
+                Mail::to($email)->queue(new AnnouncementNotification($announcement));
             }
 
-            // Loop through each uploaded file
-            foreach ($request->file('announcement_files') as $file) {
-                $fileExtension = $file->getClientOriginalExtension();
-                $fileName = time() . '-' . Str::random(10) . '.' . $fileExtension;
-
-                $file->move($destinationPath, $fileName);
-
-                AnnouncementFile::create([
-                    'announcement_id' => $announcement->id,
-                    'file_path' => 'educonnect/announcement/' . $fileName,
-                ]);
-            }
-
+            DB::commit();
+    
             return response()->json([
-                "message" => "Announcement and files uploaded successfully"
+                "message" => "Announcement and files uploaded successfully",
+                'students'=>$studentEmails
             ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+    
+            return response()->json([
+                'message' => 'Failed to create announcement.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'message' => 'Announcement created successfully.',
-        ], 201);
     }
 
     /**
