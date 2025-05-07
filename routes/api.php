@@ -26,6 +26,8 @@ Route::prefix("lecture")->controller(LectureController::class)->middleware('auth
 Route::post("/student/signup", [StudentController::class, "signup"]);
 Route::post("/student/login", [StudentController::class, "login"]);
 
+Route::get('/download/{resourceId}/{fileId}', [ResourceController::class, 'download']);
+
 Route::prefix("student")->controller(StudentController::class)->middleware('auth:sanctum')->group(function () {
     Route::post("/logout", "logout");
     Route::get("/lecturers", "getStudentLecturers");
