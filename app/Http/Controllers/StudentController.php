@@ -60,7 +60,7 @@ class StudentController extends Controller
             $student->password = Hash::make($validated['password']);
             $student->save();
 
-            Mail::to($validated['email'])->send(new RegisterMail($student));
+            // Mail::to($validated['email'])->send(new RegisterMail($student));
 
             DB::commit();
 
