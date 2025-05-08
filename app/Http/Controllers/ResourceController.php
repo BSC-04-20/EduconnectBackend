@@ -41,7 +41,7 @@ class ResourceController extends Controller
                 ResourceFile::create([
                     'resource_id'   => $resource->id,
                     'resource_name' => $originalName,
-                    'file_path'     => 'resource/' . $fileName, // relative to 'public'
+                    'file_path'     => 'resources/' . $fileName, // relative to 'public'
                 ]);
             }
 
@@ -136,6 +136,36 @@ class ResourceController extends Controller
 
             return response()->json([
                 'error' => 'An error occurred while deleting the resource: ' . $e->getMessage()
+            ], 500)->header('Content-Type', 'application/json');
+        }
+    }
+
+    /**
+     * Delete a single file from a resource.
+     */
+    public function deleteFile(string $fileId)
+    {
+        DB::beginTransaction();
+
+        try {
+            $file = ResourceFile::findOrFail($fileId);
+
+            // Delete the physical file
+            Storage::delete('public/' . $file->file_path);
+
+            // Delete the DB record
+            $file->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'File deleted successfully.'
+            ], 200)->header('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'error' => 'An error occurred while deleting the file: ' . $e->getMessage()
             ], 500)->header('Content-Type', 'application/json');
         }
     }

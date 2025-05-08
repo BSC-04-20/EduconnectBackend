@@ -26,8 +26,6 @@ Route::prefix("lecture")->controller(LectureController::class)->middleware('auth
 Route::post("/student/signup", [StudentController::class, "signup"]);
 Route::post("/student/login", [StudentController::class, "login"]);
 
-Route::get('/download/{resourceId}/{fileId}', [ResourceController::class, 'download']);
-
 Route::prefix("student")->controller(StudentController::class)->middleware('auth:sanctum')->group(function () {
     Route::post("/logout", "logout");
     Route::get("/lecturers", "getStudentLecturers");
@@ -84,6 +82,9 @@ Route::prefix("event")->controller(EventController::class)->middleware('auth:san
     Route::post("/create", "store");
 });
 
+// Downloading resources
+Route::get('/download/{resourceId}/{fileId}', [ResourceController::class, 'download']);
+
 Route::prefix("resources")->controller(ResourceController::class)->middleware('auth:sanctum')->group(function () {
     Route::get("/get", "index");  // Route to get all resources
     Route::get('/get/{id}', 'show');  // Route to get a specific resource by ID
@@ -95,6 +96,7 @@ Route::prefix("resources")->controller(ResourceController::class)->middleware('a
 
     Route::put("/update/{id}", "update");  // Route to update a resource
     Route::delete("/delete/{id}", "destroy");  // Route to delete a resource
+    Route::delete('/resource/file/{fileId}', "deleteFile");
 });
 
 Route::prefix("ratings")->controller(RatingsController::class)->middleware('auth:sanctum')->group(function () {
