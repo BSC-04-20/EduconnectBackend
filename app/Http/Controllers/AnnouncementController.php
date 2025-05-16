@@ -68,9 +68,9 @@ class AnnouncementController extends Controller
             $studentEmails = $classStudents->students->pluck('email');
 
             // Send email to each student
-            foreach ($studentEmails as $email) {
-                Mail::to($email)->queue(new AnnouncementNotification($announcement));
-            }
+            // foreach ($studentEmails as $email) {
+            //     Mail::to($email)->queue(new AnnouncementNotification($announcement));
+            // }
 
             DB::commit();
     

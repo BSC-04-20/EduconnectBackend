@@ -10,6 +10,8 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\RatingsController;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -65,6 +67,8 @@ Route::prefix("assignment")
     ->group(function () {
         Route::get("/get", "index"); // Get all assignments
         Route::get("/get/{id}", "show"); // Get a specific assignment
+        Route::get("/submissions/{id}", 'getSubmissionsForAssignment');
+        Route::get("/submission/{submissionId}", "showSubmission"); // Getting a single submission
 
         Route::post("/create", "store"); // Create an assignment
         Route::post("/submit/{assignmentId}", "submit");
@@ -82,8 +86,10 @@ Route::prefix("event")->controller(EventController::class)->middleware('auth:san
     Route::post("/create", "store");
 });
 
-// Downloading resources
+// Downloading resources, assignments
 Route::get('/download/{resourceId}/{fileId}', [ResourceController::class, 'download']);
+Route::get('/download/{fileId}', [AssignmentController::class, 'download']);
+
 
 Route::prefix("resources")->controller(ResourceController::class)->middleware('auth:sanctum')->group(function () {
     Route::get("/get", "index");  // Route to get all resources
@@ -104,4 +110,21 @@ Route::prefix("ratings")->controller(RatingsController::class)->middleware('auth
     Route::get("/get/{lectureId}", "getLectureRating");
 
     Route::post("/rate/{lectureId}", "rateLecture");
+});
+
+
+Route::get('/storage/{filename}', function ($filename) {
+    $path = 'submissions/' . $filename;
+
+    if (!Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+
+    $file = Storage::disk('public')->get($path);
+    $type = Storage::disk('public')->mimeType($path);
+
+    return Response::make($file, 200, [
+        'Content-Type' => $type,
+        'Access-Control-Allow-Origin' => '*',
+    ]);
 });

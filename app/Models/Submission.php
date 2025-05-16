@@ -26,7 +26,7 @@ class Submission extends Model
 
     public function files()
     {
-        return $this->hasMany(SubmissionFile::class);
+        return $this->hasMany(SubmissionFiles::class);
     }
 
     // Relationship with Student

@@ -15,6 +15,10 @@ use App\Models\Marking;
 use App\Models\ClassModel;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NewAssignmentNotification;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Response;
+use App\Models\Student;
+use App\Models\Lecture;
 
 class AssignmentController extends Controller
 {
@@ -25,61 +29,53 @@ class AssignmentController extends Controller
      */
     public function store(AssignmentRequest $request){
         DB::beginTransaction();
-
-            try {
-                // Create the assignment
-                $assignment = Assignment::create($request->validated());
-
-                // Check if files are uploaded
-                if ($request->hasFile('files')) {
-
-                    $destinationPath = '/var/www/html/educonnect/assignments';
-
-                    // Ensure the directory exists
-                    if (!file_exists($destinationPath)) {
-                        mkdir($destinationPath, 0755, true);
-                    }
-
-                    // Loop through and store each file
-                    foreach ($request->file('files') as $file) {
-                        $fileExtension = $file->getClientOriginalExtension();
-                        $fileName = time() . '-' . Str::random(10) . '.' . $fileExtension;
-
-                        // Move the file
-                        $file->move($destinationPath, $fileName);
-
-                        // Store metadata in DB
-                        AssignmentFile::create([
-                            'assignment_id' => $assignment->id,
-                            'file_name' => $file->getClientOriginalName(),
-                            'file_path' => 'educonnect/assignments/' . $fileName,
-                        ]);
-                    }
+    
+        try {
+            $assignment = Assignment::create($request->validated());
+    
+            if ($request->hasFile('files')) {
+                $destinationPath = storage_path('app/public/assignments');
+    
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
                 }
-
-                $classStudents = ClassModel::with('students')->findOrFail($assignment->class_id);
-                $studentEmails = $classStudents->students->pluck('email');
-
-                // Send notification emails
-                foreach ($studentEmails as $email) {
-                    Mail::to($email)->queue(new NewAssignmentNotification($assignment));
+    
+                foreach ($request->file('files') as $file) {
+                    $fileExtension = $file->getClientOriginalExtension();
+                    $fileName = time() . '-' . Str::random(10) . '.' . $fileExtension;
+    
+                    $file->move($destinationPath, $fileName);
+    
+                    AssignmentFile::create([
+                        'assignment_id' => $assignment->id,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => 'assignments/' . $fileName, // Relative to storage/app/public
+                    ]);
                 }
-
-                DB::commit();
-
-                return response()->json([
-                    'message' => 'Assignment and files uploaded successfully.'
-                ], 201);
-
-            } catch (\Exception $e) {
-                DB::rollBack();
-
-                return response()->json([
-                    'message' => 'Failed to create assignment.',
-                    'error' => $e->getMessage()
-                ], 500);
-                }
+            }
+    
+            $classStudents = ClassModel::with('students')->findOrFail($assignment->class_id);
+            $studentEmails = $classStudents->students->pluck('email');
+    
+            // foreach ($studentEmails as $email) {
+            //     Mail::to($email)->queue(new NewAssignmentNotification($assignment));
+            // }
+    
+            DB::commit();
+    
+            return response()->json([
+                'message' => 'Assignment and files uploaded successfully.'
+            ], 201);
+    
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to create assignment.',
+                'error' => $e->getMessage()
+            ], 500);
         }
+    }
+    
 
     /**
      * Index
@@ -98,10 +94,48 @@ class AssignmentController extends Controller
      */
     public function show($id)
     {
-        $assignment = Assignment::with(['class', 'assignmentFiles'])->findOrFail($id);
+        $assignment = Assignment::with(['class', 'files'])->findOrFail($id);
+        $user = auth()->user();
+        $userId = $user->id;
 
-        return response()->json($assignment);
+        // Determine if the user is a student
+        $isStudent = Student::where('id', $userId)->exists();
+
+        // Prepare base response
+        $response = [
+            'assignment' => $assignment
+        ];
+
+        if ($isStudent) {
+            // Default status
+            $status = 'not submitted';
+            $submittedFiles = [];
+
+            // Check if student submitted
+            $submission = \App\Models\Submission::where('assignment_id', $id)
+                ->where('student_id', $userId)
+                ->first();
+
+            if ($submission) {
+                $status = 'submitted';
+                $submittedFiles = \App\Models\SubmissionFiles::where('submission_id', $submission->id)->get();
+            } elseif (now()->greaterThan($assignment->due_date)) {
+                $status = 'missed';
+            }
+
+            // Add to response only for students
+            $response['status'] = $status;
+
+            if ($status === 'submitted') {
+                $response['submitted_files'] = $submittedFiles;
+            }
+        }
+
+        return response()->json($response);
     }
+
+
+
 
     /**
      * Update
@@ -122,13 +156,40 @@ class AssignmentController extends Controller
      * Delete
      * 
      * Delete an assignment by an assignment id.
-     */
+    */
     public function destroy($id)
     {
-        $assignment = Assignment::findOrFail($id);
-        $assignment->delete();
+        DB::beginTransaction();
 
-        return response()->json(['message' => 'Assignment deleted successfully.']);
+        try {
+            $assignment = Assignment::with('files')->findOrFail($id);
+
+            // Delete physical files
+            foreach ($assignment->files as $file) {
+                $filePath = public_path($file->file_path);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
+
+            // Delete assignment files from DB
+            AssignmentFile::where('assignment_id', $assignment->id)->delete();
+
+            // Delete the assignment
+            $assignment->delete();
+
+            DB::commit();
+
+            return response()->json(['message' => 'Assignment and its files deleted successfully.']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Failed to delete assignment.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -140,44 +201,34 @@ class AssignmentController extends Controller
     {
         $request->validate([
             'files' => 'required|array',
-            'files.*' => 'file', // Allow multiple file types
+            'files.*' => 'file|max:10240', // Optional: Limit file size (10MB)
         ]);
 
         DB::beginTransaction();
 
         try {
-            // Ensure the assignment exists
             $assignment = Assignment::find($assignmentId);
             if (!$assignment) {
                 return response()->json(["message" => "Assignment not found"], 404);
             }
 
-            // Get authenticated student ID
             $studentId = auth()->id();
 
-            // Create a submission record
             $submission = Submission::create([
                 'student_id' => $studentId,
                 'assignment_id' => $assignmentId,
             ]);
 
-            $destination = "/var/www/html/educonnect/submissions";
-
-            // Ensure the directory exists
-            if (!file_exists($destination)) {
-                mkdir($destination, 0755, true);
-            }
-
-            // Store each file
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $file) {
-                    $filename = time() . Str::random(10) .".". $file->getClientOriginalExtension();
-                    $file->move($destination, $filename); // Move file to target directory
+                    $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+                    
+                    // Store in storage/app/public/submissions
+                    $filePath = $file->storeAs('submissions', $filename, 'public');
 
-                    // Save file path to database
                     SubmissionFiles::create([
                         'submission_id' => $submission->id,
-                        'file_path' => "educonnect/submissions/" . $filename,
+                        'file_path' => $filePath, // This will be like 'submissions/filename.ext'
                     ]);
                 }
             }
@@ -197,6 +248,7 @@ class AssignmentController extends Controller
             ], 500);
         }
     }
+
     /**
      * Mark Assignment
      * 
@@ -296,4 +348,96 @@ class AssignmentController extends Controller
             'feedback' => $marking->feedback,
         ]);
     }
+
+    public function download($fileId)
+    {
+        // Find the file record by ID
+        $assignmentFile = AssigmentFile::findOrFail($fileId);
+
+        // Get the file path from the model
+        $filePath = $assignmentFile->file_path;
+
+        // Ensure the file exists in the public disk
+        if (!Storage::disk('public')->exists($filePath)) {
+            return response()->json(['error' => 'File not found.'], 404);
+        }
+
+        // Return a download response
+        return Storage::disk('public')->download($filePath, $assignmentFile->file_name);
+    }
+
+    /**
+     * Get all submissions for a specific assignment
+     * 
+     * @param  int  $assignmentId
+     * @return JsonResponse
+     */
+    public function getSubmissionsForAssignment($assignmentId)
+    {
+        $assignment = Assignment::with('class')->findOrFail($assignmentId);
+
+        // Get total number of students in the class
+        $totalStudents = $assignment->class->students()->count();
+
+        // Get all submissions including marking
+        $submissions = Submission::with([
+                'student:id,fullname,email,phonenumber', 
+                'files:id,submission_id,file_path',
+                'marking'  // Load related marking
+            ])
+            ->where('assignment_id', $assignmentId)
+            ->get()
+            ->map(function ($submission) {
+                return [
+                    'student' => $submission->student,
+                    'submission_id' => $submission->id,
+                    'files' => $submission->files->map(function ($file) {
+                        return [
+                            'id' => $file->id,
+                            'file_path' => $file->file_path,
+                        ];
+                    }),
+                    'marks' => $submission->marking ? $submission->marking->marks : null,
+                    'feedback' => $submission->marking ? $submission->marking->feedback : null,
+                ];
+            });
+
+        // Get all students in the class
+        $students = $assignment->class->students()
+            ->select('id', 'fullname', 'email', 'phonenumber')
+            ->get()
+            ->map(function ($student) {
+                return [
+                    'id' => $student->id,
+                    'fullname' => $student->fullname,
+                    'email' => $student->email,
+                    'phonenumber' => $student->phonenumber,
+                ];
+            });
+
+        return response()->json([
+            'assignment' => $assignment->title,
+            'total_students' => $totalStudents,
+            'students' => $students,
+            'number_of_submissions' => count($submissions),
+            'submissions' => $submissions,
+        ]);
+    }
+
+    public function showSubmission($submissionId)
+    {
+        $submission = Submission::with('files', 'student', 'assignment')->find($submissionId);
+
+        if (!$submission) {
+            return response()->json(['message' => 'Submission not found.'], 404);
+        }
+
+        return response()->json([
+            'files' => $submission->files,
+            'student' => $submission->student,
+            'assignment' => $submission->assignment,
+        ]);
+    }
+
+
 }

@@ -7,38 +7,37 @@ use App\Models\Lecture;
 use App\Http\Requests\LectureRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\RegisterMail;
 use Illuminate\Http\JsonResponse;
 
 class LectureController extends Controller
 {
     /**
      * Trial
-     * 
-     * This is a method to call if you want to try to check ig the api is running.
      */
-    function show(){
-        return("Hello from educonnect api.");
+    public function show()
+    {
+        return "Hello from educonnect api.";
     }
+
     /**
      * Login
-     * 
-     * Handle an authentication attempt. Method for a lecturer login
      */
-    public function login(Request $request){
+    public function login(Request $request)
+    {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        // Find user by email
         $user = Lecture::where('email', $credentials['email'])->first();
 
-        // Check if user exists and password is correct
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        // Create a new API token
         $token = $user->createToken('API Token')->plainTextToken;
 
         return response()->json([
@@ -49,39 +48,54 @@ class LectureController extends Controller
 
     /**
      * Logout
-     * 
-     * Unauthenticating lecturer
      */
     public function logout(Request $request)
     {
-        // Revoke the current user's token
-        $request->user()->currentAccessToken()->delete();
+        DB::beginTransaction();
+        try {
+            $request->user()->currentAccessToken()->delete();
 
-        return response()->json([
-            'message' => 'Logged out successfully'
-        ], 200);
+            DB::commit();
+            return response()->json([
+                'message' => 'Logged out successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Logout failed',
+                'details' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
      * Signup
-     * 
-     * Registering lecturer
      */
-    function signup(LectureRequest $request):JsonResponse {
-            $validated = $request->validated();
+    public function signup(LectureRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
 
+        DB::beginTransaction();
+        try {
             $lecture = new Lecture();
-
-            $lecture->fullname = $request->fullname;
-            $lecture->email = $request->email;
-            $lecture->phonenumber = $request->phonenumber;
-            $lecture->password = Hash::make($request->input("password"));
-
+            $lecture->fullname = $validated['fullname'];
+            $lecture->email = $validated['email'];
+            $lecture->phonenumber = $validated['phonenumber'];
+            $lecture->password = Hash::make($validated['password']);
             $lecture->save();
 
+            Mail::to($validated['email'])->send(new RegisterMail($lecture));
+
+            DB::commit();
             return response()->json([
                 "message" => "Created Successfully"
             ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                "error" => "Signup failed",
+                "details" => $e->getMessage()
+            ], 500);
+        }
     }
 }
-
