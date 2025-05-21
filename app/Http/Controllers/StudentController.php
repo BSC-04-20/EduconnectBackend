@@ -104,4 +104,35 @@ class StudentController extends Controller
             'lecturers' => $lecturers
         ]);
     }
+
+    /**
+     * Update the authenticated student's profile (excluding password).
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'fullname'     => 'sometimes|string|max:255',
+            'email'        => 'sometimes|email|unique:students,email,' . $user->id,
+            'phonenumber'  => 'sometimes|string|regex:/^[0-9]{10,15}$/',
+        ]);
+
+        try {
+            $user->update($validated);
+
+            return response()->json([
+                'message' => 'Profile updated successfully.',
+                'user' => $user
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to update profile.',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

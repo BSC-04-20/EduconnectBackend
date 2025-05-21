@@ -98,4 +98,37 @@ class LectureController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Change profile
+     * 
+     * Update the authenticated lecture's profile (excluding password).
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'fullname'     => 'sometimes|string|max:255',
+            'email'        => 'sometimes|email|unique:lectures,email,' . $user->id,
+            'phonenumber'  => 'sometimes|string|max:20',
+        ]);
+
+        try {
+            $user->update($validated);
+
+            return response()->json([
+                'message' => 'Profile updated successfully.',
+                'user' => $user
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to update profile.',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

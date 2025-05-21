@@ -22,6 +22,7 @@ Route::get("/trial", [LectureController::class, 'show']);
 Route::post("/lecture/signup", [LectureController::class, "signup"]);
 Route::post("/lecture/login", [LectureController::class, "login"]);
 Route::prefix("lecture")->controller(LectureController::class)->middleware('auth:sanctum')->group(function () {
+    Route::post("/updateProfile", "updateProfile");
     Route::post("/logout", "logout");
 });
 
@@ -29,6 +30,7 @@ Route::post("/student/signup", [StudentController::class, "signup"]);
 Route::post("/student/login", [StudentController::class, "login"]);
 
 Route::prefix("student")->controller(StudentController::class)->middleware('auth:sanctum')->group(function () {
+    Route::post("/updateProfile", "updateProfile");
     Route::post("/logout", "logout");
     Route::get("/lecturers", "getStudentLecturers");
 });
