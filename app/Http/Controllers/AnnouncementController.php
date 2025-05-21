@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ClassModel;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AnnouncementNotification;
+use Illuminate\Support\Facades\Auth;
 
 class AnnouncementController extends Controller
 {
@@ -158,5 +159,51 @@ class AnnouncementController extends Controller
         return response()->json([
             'message' => 'Announcement deleted successfully'
         ], 200);
+    }
+
+    /*
+    * Student Announcement
+    * Get all announcements for an authenticated student
+    */
+    public function getMyAnnouncements()
+    {
+        try {
+            $student = Auth::user(); // Get the currently authenticated user
+
+            if (!$student) {
+                return response()->json([
+                    'message' => 'Unauthenticated.'
+                ], 401);
+            }
+
+            // Get class IDs that this student is part of
+            $classIds = DB::table('classstudents')
+                ->where('student_id', $student->id)
+                ->pluck('classe_id');
+
+            if ($classIds->isEmpty()) {
+                return response()->json([
+                    'message' => 'You are not enrolled in any classes.',
+                    'announcements' => []
+                ], 200);
+            }
+
+            // Fetch announcements for these classes
+            $announcements = Announcement::with('files')
+                ->whereIn('class_id', $classIds)
+                ->latest()
+                ->get();
+
+            return response()->json([
+                'message' => 'Announcements retrieved successfully.',
+                'announcements' => $announcements
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error retrieving announcements.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

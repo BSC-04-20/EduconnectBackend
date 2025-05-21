@@ -211,6 +211,34 @@ class ClassController extends Controller
     }
 
     /**
+     * Count Lecturer Classes
+     * 
+     * Return the total number of classes created by the authenticated lecturer.
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     *
+     * @authenticated
+     *
+     * @response 200 {
+     *   "total_classes": 5
+     * }
+     */
+    public function countLecturerClasses(Request $request): JsonResponse
+    {
+        // Get the authenticated lecturer's ID
+        $lecturerId = $request->user()->id;
+
+        // Count the number of classes created by this lecturer
+        $classCount = ClassModel::where('lecture_id', $lecturerId)->count();
+
+        // Return the count in JSON format
+        return response()->json([
+            'total_classes' => $classCount
+        ]);
+    }
+
+    /**
      * Get Class Discussions
      * 
      * Return all discussions from a certain class

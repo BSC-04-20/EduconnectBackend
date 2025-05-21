@@ -233,4 +233,32 @@ class ResourceController extends Controller
 
         return response()->download($filePath, $resourceFile->resource_name);
     }
+
+    /**
+     * Count all lecture resources
+     * 
+     * Count all resources uploaded by the authenticated lecturer.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @authenticated
+     *
+     * @response 200 {
+     *   "resources_count": 12
+     * }
+     */
+    public function countAllLecturerResources(Request $request)
+    {
+        $lecturerId = $request->user()->id;
+
+        // Count all resources where the class belongs to the authenticated lecturer
+        $count = Resource::whereHas('class', function ($query) use ($lecturerId) {
+            $query->where('lecture_id', $lecturerId);
+        })->count();
+
+        return response()->json([
+            'resources_count' => $count
+        ]);
+    }
 }

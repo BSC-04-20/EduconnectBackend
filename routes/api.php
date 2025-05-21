@@ -35,6 +35,7 @@ Route::prefix("student")->controller(StudentController::class)->middleware('auth
 
 Route::prefix("classes")->controller(ClassController::class)->middleware('auth:sanctum')->group(function () {
     Route::get("/get", "lectureClasses");
+    Route::get("/count", "countLecturerClasses");
     Route::get('/get/{id}', 'getClassById');
     Route::get('/get/{id}/students', 'getStudents');
     Route::get('/get/{id}/all/post', 'getCombinedAssignmentsAndAnnouncements');
@@ -54,7 +55,7 @@ Route::prefix("announcement")
     ->group(function () {
         Route::get("/get", "index");
         Route::get("/get/{id}", "show");
-
+        Route::get("/student", "getMyAnnouncements");
         Route::post("/create", "store");
 
         Route::put("/update/{id}", "update");
@@ -82,7 +83,7 @@ Route::prefix("assignment")
 
 Route::prefix("event")->controller(EventController::class)->middleware('auth:sanctum')->group(function () {
     Route::get("/get", "get");
-
+    Route::get("/count", "countMyEvents");
     Route::post("/create", "store");
 });
 
@@ -93,6 +94,7 @@ Route::get('/download/{fileId}', [AssignmentController::class, 'download']);
 
 Route::prefix("resources")->controller(ResourceController::class)->middleware('auth:sanctum')->group(function () {
     Route::get("/get", "index");  // Route to get all resources
+    Route::get("/count", "countAllLecturerResources");
     Route::get('/get/{id}', 'show');  // Route to get a specific resource by ID
     Route::get("/lecture", "getAllResourcesForAuthenticatedLecture");
     Route::get("/class/{classId}", "getResourcesByClassId");
