@@ -187,15 +187,27 @@ class AnnouncementController extends Controller
                 ], 200);
             }
 
-            // Fetch announcements for these classes
-            $announcements = Announcement::with('files')
+            // Fetch announcements with related class and course info
+            $announcements = Announcement::with(['files', 'class'])
                 ->whereIn('class_id', $classIds)
                 ->latest()
                 ->get();
 
+            // Optionally transform output to include course name directly
+            $result = $announcements->map(function ($announcement) {
+                return [
+                    'id' => $announcement->id,
+                    'title' => $announcement->title,
+                    'description' => $announcement->description,
+                    'class_name' => $announcement->class->name ?? null,
+                    'files' => $announcement->files,
+                    'created_at' => $announcement->created_at,
+                ];
+            });
+
             return response()->json([
                 'message' => 'Announcements retrieved successfully.',
-                'announcements' => $announcements
+                'announcements' => $result
             ], 200);
 
         } catch (\Exception $e) {
@@ -205,4 +217,5 @@ class AnnouncementController extends Controller
             ], 500);
         }
     }
+
 }
