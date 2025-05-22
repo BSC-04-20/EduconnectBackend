@@ -485,8 +485,6 @@ class AssignmentController extends Controller
             }
 
             return [
-                'student_id' => $student->id,
-                'fullname' => $student->fullname,
                 'average_score' => $markedCount > 0 ? round($totalMarks / $markedCount, 2) : null
             ];
         });
