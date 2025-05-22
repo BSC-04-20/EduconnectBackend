@@ -106,6 +106,8 @@ class StudentController extends Controller
     }
 
     /**
+     * Change Student profile
+     * 
      * Update the authenticated student's profile (excluding password).
      *
      * @param Request $request
@@ -113,13 +115,14 @@ class StudentController extends Controller
      */
     public function updateProfile(Request $request): JsonResponse
     {
-        $user = $request->user();
-
+        
         $validated = $request->validate([
             'fullname'     => 'sometimes|string|max:255',
-            'email'        => 'sometimes|email|unique:students,email,' . $user->id,
-            'phonenumber'  => 'sometimes|string|regex:/^[0-9]{10,15}$/',
+            'email'        => 'sometimes|email|unique:lectures,email,',
+            'phonenumber'  => 'sometimes|string|max:20',
         ]);
+
+        $user = $request->user();
 
         try {
             $user->update($validated);

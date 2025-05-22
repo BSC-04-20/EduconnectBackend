@@ -184,7 +184,6 @@ class AnnouncementController extends Controller
             if ($classIds->isEmpty()) {
                 return response()->json([
                     'message' => 'You are not enrolled in any classes.',
-                    'announcements' => []
                 ], 200);
             }
 

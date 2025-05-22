@@ -438,6 +438,83 @@ class AssignmentController extends Controller
             'assignment' => $submission->assignment,
         ]);
     }
+    
 
+    /*
+    * Calculate Student average scores
+    *
+    * Return the average score for all student work
+    */
+    public function getStudentAverageScore()
+    {
+        $studentId = auth()->id();
+        $average = Marking::whereHas('submission', function ($query) use ($studentId) {
+            $query->where('student_id', $studentId);
+        })->avg('marks');
 
+        return response()->json([
+            'average_score' => $average !== null ? round($average, 2) : null,
+        ]);
+    }
+
+    /*
+    * Student Average per class
+    *
+    * Calculate the average score per course
+    */
+    public function getStudentAveragesForClass($classId)
+    {
+        $class = ClassModel::with('students')->findOrFail($classId);
+
+        $averages = $class->students->map(function ($student) use ($classId) {
+            $submissions = Submission::where('student_id', $student->id)
+                ->whereHas('assignment', function ($query) use ($classId) {
+                    $query->where('class_id', $classId);
+                })
+                ->with('marking')
+                ->get();
+
+            $totalMarks = 0;
+            $markedCount = 0;
+
+            foreach ($submissions as $submission) {
+                if ($submission->marking) {
+                    $totalMarks += $submission->marking->marks;
+                    $markedCount++;
+                }
+            }
+
+            return [
+                'student_id' => $student->id,
+                'fullname' => $student->fullname,
+                'average_score' => $markedCount > 0 ? round($totalMarks / $markedCount, 2) : null
+            ];
+        });
+
+        return response()->json($averages);
+    }
+
+    /*
+    * Student scores
+    *
+    * Get  all scores of marked assignmnents
+    */
+    public function getStudentScoresWithDetails($studentId)
+    {
+        // Find all submissions by the student, including assignment, class, and marking
+        $submissions = Submission::where('student_id', $studentId)
+            ->with(['assignment.class', 'marking'])
+            ->get();
+
+        // Map the response to include desired data
+        $scores = $submissions->map(function ($submission) {
+            return [
+                'assignment_name' => $submission->assignment->name,
+                'class_name' => $submission->assignment->class->name,
+                'score' => optional($submission->marking)->marks,
+            ];
+        });
+
+        return response()->json($scores);
+    }
 }
