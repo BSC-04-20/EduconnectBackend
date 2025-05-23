@@ -46,6 +46,7 @@ Route::prefix("classes")->controller(ClassController::class)->middleware('auth:s
     Route::get("/discussions/student", "getStudentDiscussions");
     Route::get("/discussion/{discussionId}", "getDiscussionById");
 
+    Route::post('/discussion/{discussionId}/attend', "attendDiscussion");
     Route::post("/create", "create");
     Route::post("/join", "join");
     Route::post('/{classId}/discussion', 'createDiscussion');
@@ -73,6 +74,7 @@ Route::prefix("assignment")
         Route::get("/submissions/{id}", 'getSubmissionsForAssignment');
         Route::get("/submission/{submissionId}", "showSubmission"); // Getting a single submission
         Route::get("/average", "getStudentAverageScore");
+        Route::get("/student", "studentAssignmentsWithStatus");
         Route::get("/average/{classId}", "getStudentAveragesForClass");
         Route::post("/create", "store"); // Create an assignment
         Route::post("/submit/{assignmentId}", "submit");

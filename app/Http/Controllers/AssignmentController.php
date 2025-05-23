@@ -515,4 +515,56 @@ class AssignmentController extends Controller
 
         return response()->json($scores);
     }
+
+    /**
+     * All student assignments
+     * 
+     * Get all assignments for the authenticated student with submission status.
+     */
+    public function studentAssignmentsWithStatus()
+    {
+        $user = auth()->user();
+
+        // Confirm user is a student
+        $student = Student::find($user->id);
+        if (!$student) {
+            return response()->json(['message' => 'Authenticated user is not a student.'], 403);
+        }
+
+        // Get all classes the student is enrolled in
+        $classes = $student->classes()->pluck('classe_id');
+
+        // Get assignments for those classes
+        $assignments = Assignment::with('class')
+            ->whereIn('class_id', $classes)
+            ->orderBy('due_date', 'desc')
+            ->get();
+
+        // Build response with status
+        $assignmentsWithStatus = $assignments->map(function ($assignment) use ($student) {
+            $submission = Submission::where('assignment_id', $assignment->id)
+                ->where('student_id', $student->id)
+                ->first();
+
+            $status = 'not submitted';
+
+            if ($submission) {
+                $status = 'submitted';
+            } elseif (now()->greaterThan($assignment->due_date)) {
+                $status = 'missed';
+            }
+
+            return [
+                'id' => $assignment->id,
+                'title' => $assignment->title,
+                'description' => $assignment->description,
+                'due_date' => $assignment->due_date,
+                'class' => $assignment->class->name ?? null,
+                'status' => $status,
+                'submitted_at' => $submission ? $submission->created_at : null,
+            ];
+        });
+
+        return response()->json($assignmentsWithStatus);
+    }
 }

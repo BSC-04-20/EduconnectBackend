@@ -12,6 +12,7 @@ use App\Models\Lecture;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 use App\Models\Discussion;
+use App\Models\Attendee;
 use Illuminate\Support\Facades\Auth;  
 
 class ClassController extends Controller
@@ -310,5 +311,39 @@ class ClassController extends Controller
         return response()->json([
             'discussion' => $discussion,
         ], 200);
+    }
+
+
+    /*
+    * Capture the attended meeting
+    *
+    * Pass the discussion id for the current discussion
+    */
+    public function attendDiscussion($discussionId)
+    {
+        $userId = Auth::id();
+
+        // Check if the discussion exists
+        $discussion = Discussion::find($discussionId);
+        if (!$discussion) {
+            return response()->json(['message' => 'Discussion not found.'], 404);
+        }
+
+        // Check if the user already attended
+        $alreadyAttended = Attendee::where('discussion_id', $discussionId)
+            ->where('student_id', $userId)
+            ->exists();
+
+        if ($alreadyAttended) {
+            return response()->json(['message' => 'You have already attended this discussion.'], 409);
+        }
+
+        // Create attendance
+        Attendee::create([
+            'discussion_id' => $discussionId,
+            'student_id' => $userId
+        ]);
+
+        return response()->json(['message' => 'Attendance recorded successfully.'], 201);
     }
 }
