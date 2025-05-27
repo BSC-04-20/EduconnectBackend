@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use App\Mail\RegisterMail;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
+use App\Models\StudentProfilePicture;
+use Illuminate\Support\Facades\Storage;
 
 class StudentController extends Controller
 {
@@ -137,5 +140,129 @@ class StudentController extends Controller
                 'details' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Upload a new profile picture
+     */
+    public function upload(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image'
+        ]);
+
+        $student = $request->user();
+
+        DB::beginTransaction();
+
+        try {
+            // Remove existing picture if exists
+            $existing = StudentProfilePicture::where('student_id', $student->id)->first();
+            if ($existing) {
+                Storage::delete($existing->image_path);
+                $existing->delete();
+            }
+
+            $path = $request->file('image')->store("profile_pictures");
+
+            $record = StudentProfilePicture::create([
+                'student_id' => $student->id,
+                'image_path' => $path,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Profile picture uploaded successfully',
+                'image_url' => asset("storage/" . $record->image_path)
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'error' => 'Failed to upload profile picture',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Show the authenticated student’s profile picture
+     */
+    public function show(Request $request)
+    {
+        $student = $request->user();
+
+        $record = StudentProfilePicture::where('student_id', $student->id)->first();
+
+        if (!$record) {
+            return response()->json(['message' => 'No profile picture found'], 404);
+        }
+
+        return response()->json([
+            'image_url' => asset("storage/" . $record->image_path)
+        ]);
+    }
+
+    /**
+     * Update profile picture
+     */
+    public function update(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|max:2048'
+        ]);
+
+        $student = $request->user();
+
+        DB::beginTransaction();
+
+        try {
+            $existing = StudentProfilePicture::where('student_id', $student->id)->first();
+
+            if ($existing) {
+                Storage::delete($existing->image_path);
+                $existing->delete();
+            }
+
+            $path = $request->file('image')->store("profile_pictures");
+
+            $record = StudentProfilePicture::create([
+                'student_id' => $student->id,
+                'image_path' => $path,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Profile picture updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'error' => 'Failed to update profile picture',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete profile picture
+     */
+    public function delete(Request $request)
+    {
+        $student = $request->user();
+
+        $record = StudentProfilePicture::where('student_id', $student->id)->first();
+
+        if (!$record) {
+            return response()->json(['message' => 'No profile picture to delete'], 404);
+        }
+
+        Storage::delete($record->image_path);
+        $record->delete();
+
+        return response()->json(['message' => 'Profile picture deleted']);
     }
 }

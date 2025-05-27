@@ -110,9 +110,10 @@ class AnnouncementController extends Controller
 
         return response()->json([
             "lecture_name" => $lecture ? $lecture->fullname : "Unknown",
+            "name" => $announcement->class ? $announcement->class->name : "Unknown",
             "title" => $announcement->title,
             "description" => $announcement->description,
-            "posted"=> $announcement->created_at,
+            "posted" => $announcement->created_at,
             "files" => $announcement->files->pluck("file_path")
         ]);
     }

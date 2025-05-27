@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Lecture;
+use App\Models\LectureProfilePicture;
 use App\Http\Requests\LectureRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\RegisterMail;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+
 
 class LectureController extends Controller
 {
@@ -160,4 +164,111 @@ class LectureController extends Controller
             ], 500);
         }
     }
+
+    public function uploadProfilePicture(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image'
+        ]);
+
+        $lecture = $request->user();
+
+        DB::beginTransaction();
+        try {
+            // Delete existing profile picture if it exists
+            $existing = LectureProfilePicture::where('lecture_id', $lecture->id)->first();
+            if ($existing) {
+                Storage::delete($existing->image_path);
+                $existing->delete();
+            }
+
+            // Store new image
+            $imagePath = $request->file('image')->store('profile_pictures');
+
+            // Attempt to insert DB record
+            LectureProfilePicture::create([
+                'identifier' => (string) Str::uuid(),
+                'lecture_id' => $lecture->id,
+                'image_path' => $imagePath
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Profile picture uploaded successfully.',
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // Cleanup uploaded file if it exists
+            if (!empty($imagePath) && Storage::exists($imagePath)) {
+                Storage::delete($imagePath);
+            }
+
+            return response()->json([
+                'error' => 'Failed to upload profile picture.',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getProfilePicture(Request $request)
+    {
+        $lecture = $request->user();
+
+        $picture = LectureProfilePicture::where('lecture_id', $lecture->id)->first();
+
+        if (!$picture) {
+            return response()->json(['message' => 'No profile picture found.'], 404);
+        }
+
+        return response()->json([
+            'data' => $picture
+        ], 200);
+    }
+
+    public function updateProfilePicture(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image'
+        ]);
+
+        $lecture = $request->user();
+
+        $picture = LectureProfilePicture::where('lecture_id', $lecture->id)->first();
+
+        if (!$picture) {
+            return response()->json(['message' => 'Profile picture not found.'], 404);
+        }
+
+        Storage::delete($picture->image_path);
+        $newPath = $request->file('image')->store('profile_pictures');
+
+        $picture->update([
+            'image_path' => $newPath
+        ]);
+
+        return response()->json([
+            'message' => 'Profile picture updated successfully.',
+            'data' => $picture
+        ]);
+    }
+
+        public function deleteProfilePicture(Request $request)
+    {
+        $lecture = $request->user();
+
+        $picture = LectureProfilePicture::where('lecture_id', $lecture->id)->first();
+
+        if (!$picture) {
+            return response()->json(['message' => 'No profile picture to delete.'], 404);
+        }
+
+        Storage::delete($picture->image_path);
+        $picture->delete();
+
+        return response()->json(['message' => 'Profile picture deleted successfully.']);
+    }
+
 }

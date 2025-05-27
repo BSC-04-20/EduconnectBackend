@@ -44,4 +44,9 @@ class Student extends Authenticatable
     {
         return $this->hasManyThrough(Marking::class, Submission::class);
     }
+
+    public function profilePicture()
+    {
+        return $this->hasOne(StudentProfilePicture::class, 'student_id', 'id');
+    }
 }

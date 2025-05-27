@@ -27,4 +27,8 @@ class Lecture extends Authenticatable
     {
         return $this->hasMany(Rating::class, 'lecture_id');
     }
+    public function profilePicture()
+    {
+        return $this->hasOne(LectureProfilePicture::class);
+    }
 }

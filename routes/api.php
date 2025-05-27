@@ -26,6 +26,20 @@ Route::prefix("lecture")->controller(LectureController::class)->middleware('auth
     Route::post("/logout", "logout");
 });
 
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/lecture/profile-picture', [LectureController::class, 'uploadProfilePicture']);
+    Route::get('/lecture/profile-picture', [LectureController::class, 'getProfilePicture']);
+    Route::put('/lecture/profile-picture', [LectureController::class, 'updateProfilePicture']);
+    Route::delete('/lecture/profile-picture', [LectureController::class, 'deleteProfilePicture']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/student/profile-picture', [StudentController::class, 'upload']);
+    Route::get('/student/profile-picture', [StudentController::class, 'show']);
+    Route::put('/student/profile-picture', [StudentController::class, 'update']);
+    Route::delete('/student/profile-picture', [StudentController::class, 'delete']);
+});
+
 Route::post("/student/signup", [StudentController::class, "signup"]);
 Route::post("/student/login", [StudentController::class, "login"]);
 

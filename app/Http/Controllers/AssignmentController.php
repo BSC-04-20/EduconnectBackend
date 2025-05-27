@@ -107,36 +107,34 @@ class AssignmentController extends Controller
         ];
 
         if ($isStudent) {
-            // Default status
             $status = 'not submitted';
             $submittedFiles = [];
+            $mark = null;
 
-            // Check if student submitted
-            $submission = \App\Models\Submission::where('assignment_id', $id)
+            // Eager load marking and files for the submission
+            $submission = \App\Models\Submission::with(['marking', 'files'])
+                ->where('assignment_id', $id)
                 ->where('student_id', $userId)
                 ->first();
 
             if ($submission) {
                 $status = 'submitted';
-                $submittedFiles = \App\Models\SubmissionFiles::where('submission_id', $submission->id)->get();
+                $submittedFiles = $submission->files;
+                $mark = $submission->marking?->marks; // Safely access marks using null-safe operator
             } elseif (now()->greaterThan($assignment->due_date)) {
                 $status = 'missed';
             }
 
-            // Add to response only for students
             $response['status'] = $status;
 
             if ($status === 'submitted') {
                 $response['submitted_files'] = $submittedFiles;
+                $response['mark'] = $mark;
             }
         }
 
         return response()->json($response);
     }
-
-
-
-
     /**
      * Update
      * 
