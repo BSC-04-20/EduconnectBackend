@@ -58,7 +58,9 @@ Route::prefix("classes")->controller(ClassController::class)->middleware('auth:s
     Route::get('/student-classes', 'studentClasses');
     Route::get('/{classId}/discussions', "getByClassId");
     Route::get("/discussions/student", "getStudentDiscussions");
+    Route::get("/discussion/summary", "getMyDiscussionSummary");
     Route::get("/discussion/{discussionId}", "getDiscussionById");
+    Route::get("/discussion/summary/{discussionId}", "getDiscussionAttendance");
 
     Route::post('/discussion/{discussionId}/attend', "attendDiscussion");
     Route::post("/create", "create");

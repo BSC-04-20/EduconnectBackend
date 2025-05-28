@@ -16,7 +16,7 @@ class Student extends Authenticatable
     protected $primaryKey = 'id';
     public $timestamps = true;
     protected $fillable = ["fullname", "email", "phonenumber", "password"];
-    protected $hidden = ["password", "created_at", "updated_at", "pivot"];
+    protected $hidden = ["password", "created_at", "updated_at", "pivot", 'id'];
 
     public function classes()
     {

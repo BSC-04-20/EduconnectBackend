@@ -346,4 +346,78 @@ class ClassController extends Controller
 
         return response()->json(['message' => 'Attendance recorded successfully.'], 201);
     }
+
+    /**
+     * Get Discussion Attendance Summary
+     * 
+     * Returns students who attended and who did not attend a specific discussion.
+     */
+    public function getDiscussionAttendance($discussionId)
+    {
+        // Find the discussion and related class
+        $discussion = Discussion::find($discussionId);
+
+        if (!$discussion) {
+            return response()->json(['message' => 'Discussion not found.'], 404);
+        }
+
+        $classId = $discussion->class_id;
+
+        // Get all student IDs in the class
+        $classStudents = ClassStudents::where('classe_id', $classId)->pluck('student_id');
+
+        // Get student IDs who attended the discussion
+        $attendedStudents = Attendee::where('discussion_id', $discussionId)->pluck('student_id');
+
+        // Get student IDs who did not attend
+        $notAttendedStudents = $classStudents->diff($attendedStudents);
+
+        // Get student names and emails
+        $attended = DB::table('students')
+            ->whereIn('id', $attendedStudents)
+            ->select('fullname', 'email')
+            ->get();
+
+        $notAttended = DB::table('students')
+            ->whereIn('id', $notAttendedStudents)
+            ->select('fullname', 'email')
+            ->get();
+
+        return response()->json([
+            'discussion' => $discussion->meeting_name,
+            'attended' => $attended,
+            'not_attended' => $notAttended
+        ]);
+    }
+
+    /**
+     * Get Discussion Summary for Authenticated Student
+     *
+     * Returns total discussions related to the student's classes and how many they've attended.
+     */
+    public function getMyDiscussionSummary()
+    {
+        $student = auth()->user(); // or auth('student')->user() if using a custom guard
+
+        if (!$student) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        // Get class IDs the student is enrolled in
+        $classIds = ClassStudents::where('student_id', $student->id)->pluck('classe_id');
+
+        // Get total discussions across those classes
+        $totalDiscussions = Discussion::whereIn('class_id', $classIds)->count();
+
+        // Count of discussions attended by the student
+        $attendedDiscussions = Attendee::where('student_id', $student->id)->count();
+
+        return response()->json([
+            'student_name' => $student->fullname,
+            'student_email' => $student->email,
+            'total_discussions' => $totalDiscussions,
+            'attended_discussions' => $attendedDiscussions
+        ]);
+    }
+
 }
