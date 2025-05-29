@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Student extends Authenticatable
 {
@@ -16,7 +17,7 @@ class Student extends Authenticatable
     protected $primaryKey = 'id';
     public $timestamps = true;
     protected $fillable = ["fullname", "email", "phonenumber", "password"];
-    protected $hidden = ["password", "created_at", "updated_at", "pivot", 'id'];
+    protected $hidden = ["password", "created_at", "updated_at", "pivot"];
 
     public function classes()
     {

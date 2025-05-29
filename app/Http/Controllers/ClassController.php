@@ -419,5 +419,4 @@ class ClassController extends Controller
             'attended_discussions' => $attendedDiscussions
         ]);
     }
-
 }

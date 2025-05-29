@@ -121,7 +121,7 @@ class StudentController extends Controller
         
         $validated = $request->validate([
             'fullname'     => 'sometimes|string|max:255',
-            'email'        => 'sometimes|email|unique:lectures,email,',
+            'email'        => 'sometimes|email|unique:students,email,',
             'phonenumber'  => 'sometimes|string|max:20',
         ]);
 

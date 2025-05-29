@@ -91,6 +91,10 @@ Route::prefix("assignment")
         Route::get("/submission/{submissionId}", "showSubmission"); // Getting a single submission
         Route::get("/average", "getStudentAverageScore");
         Route::get("/student", "studentAssignmentsWithStatus");
+        Route::get('/student/early', 'early');
+        Route::get("/stats", 'getAssignmentStatsForAuthenticatedUser');
+        Route::get("/marks", 'getAssignmentsWithMarksForAuthenticatedUser');
+        Route::get("/group", 'groupedAssignments');
         Route::get("/average/{classId}", "getStudentAveragesForClass");
         Route::post("/create", "store"); // Create an assignment
         Route::post("/submit/{assignmentId}", "submit");

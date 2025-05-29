@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
 use App\Models\Student;
 use App\Models\Lecture;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class AssignmentController extends Controller
 {
@@ -564,5 +566,159 @@ class AssignmentController extends Controller
         });
 
         return response()->json($assignmentsWithStatus);
+    }
+
+    /*
+    * Get the submission details
+    * 
+    * This will return an early
+    */
+    public function early()
+    {
+    $student = auth()->user();
+
+    // Get all class IDs the student belongs to
+    $classIds = $student->classes()->pluck('classes.id');
+
+    // Get all assignments in these classes
+    $assignments = Assignment::whereIn('class_id', $classIds)
+        ->with(['submissions' => function ($query) {
+            $query->orderBy('created_at', 'asc')->with('student');
+        }])
+        ->get();
+
+    // Map to get the earliest submission per assignment
+    $results = $assignments->map(function ($assignment) {
+        $earliest = $assignment->submissions->first();
+
+        return [
+            'assignment_id' => $assignment->id,
+            'assignment_title' => $assignment->title,
+            'earliest_submitter' => $earliest ? [
+                'student_id' => $earliest->student->id,
+                'student_name' => $earliest->student->fullname,
+                'submitted_at' => $earliest->created_at,
+            ] : null,
+        ];
+    });
+
+        return response()->json($results);
+    }
+
+    public function groupedAssignments()
+    {
+    $student = Auth::user();
+
+    $studentSubmissions = $student->submissions()->with('assignment')->get();
+
+    $grouped = [
+        'Very Early' => [],
+        'Early' => [],
+        'Late' => [],
+        'Very Late' => [],
+    ];
+
+    foreach ($studentSubmissions as $submission) {
+        $assignment = $submission->assignment;
+
+        if (!$assignment || !$assignment->due_date) continue;
+
+        $dueDate = Carbon::parse($assignment->due_date);
+        $firstSubmission = Submission::where('assignment_id', $assignment->id)
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        if (!$firstSubmission) continue;
+
+        $firstTime = Carbon::parse($firstSubmission->created_at);
+        $studentTime = Carbon::parse($submission->created_at);
+
+        // Ensure time moves forward
+        if ($firstTime->gte($dueDate)) continue; // Edge case: due date before first submission
+
+        $totalSeconds = $firstTime->diffInSeconds($dueDate); // always positive
+
+        // Define quartile boundaries
+        $veryEarlyEnd = $firstTime->copy()->addSeconds($totalSeconds * 0.25);
+        $earlyEnd = $firstTime->copy()->addSeconds($totalSeconds * 0.50);
+        $lateEnd = $firstTime->copy()->addSeconds($totalSeconds * 0.75);
+
+        $assignmentData = [
+            'id' => $assignment->id,
+            'title' => $assignment->title ?? null,
+            'submitted_at' => $studentTime->toDateTimeString(),
+            'time_windows' => [
+                'first_submission' => $firstTime->toDateTimeString(),
+                'due_date' => $dueDate->toDateTimeString(),
+                'very_early_end' => $veryEarlyEnd->toDateTimeString(),
+                'early_end' => $earlyEnd->toDateTimeString(),
+                'late_end' => $lateEnd->toDateTimeString(),
+            ],
+        ];
+
+        // Group based on submission time
+        if ($studentTime->lte($veryEarlyEnd)) {
+            $grouped['Very Early'][] = $assignmentData;
+        } elseif ($studentTime->lte($earlyEnd)) {
+            $grouped['Early'][] = $assignmentData;
+        } elseif ($studentTime->lte($lateEnd)) {
+            $grouped['Late'][] = $assignmentData;
+        } else {
+            $grouped['Very Late'][] = $assignmentData;
+        }
+    }
+
+        return response()->json($grouped);
+    }
+
+    /*
+    * Missed and Submitted
+    *
+    * All assignments for a student
+    */
+    function getAssignmentStatsForAuthenticatedUser()
+    {
+        $user = Auth::user();
+
+        $totalAssignments = Assignment::count();
+
+        $missedAssignments = Assignment::whereDoesntHave('submissions', function ($query) use ($user) {
+            $query->where('student_id', $user->id);
+        })->where('due_date', '<', now())->count();
+
+        return [
+            'total_assignments' => $totalAssignments,
+            'missed_assignments' => $missedAssignments,
+        ];
+    }
+    
+    /*
+    * Assignment marks
+    *
+    * All assignments and their total marks
+    */
+    function getAssignmentsWithMarksForAuthenticatedUser()
+    {
+        $user = Auth::user();
+
+        // Get all assignments with related submissions and markings for the authenticated student
+        return Assignment::with(['submissions.marking' => function ($query) use ($user) {
+            $query->whereHas('submission', function ($subQuery) use ($user) {
+                $subQuery->where('student_id', $user->id);
+            });
+        }, 'submissions' => function ($query) use ($user) {
+            $query->where('student_id', $user->id);
+        }])->get()->map(function ($assignment) {
+            $submission = $assignment->submissions->first();
+            $marking = $submission?->marking;
+
+            return [
+                'assignment_id' => $assignment->id,
+                'title' => $assignment->title,
+                'marks_obtained' => $marking?->marks,
+                'submitted_at' => $submission?->created_at,
+            ];
+        });
+
     }
 }
